@@ -55,8 +55,8 @@ M.open = function()
   vim.bo[buf].filetype = "markdown"
 
   local wc = M.config.win
-  local width = wc.width or math.min(60, vim.o.columns - 4)
-  local height = wc.height or math.min(#lines, vim.o.lines - 4)
+  local width = wc.width or math.min(80, vim.o.columns - 4)
+  local height = wc.height or math.min(math.max(#lines, 20), vim.o.lines - 4)
   local row = math.floor((vim.o.lines - height) / 2)
   local col = math.floor((vim.o.columns - width) / 2)
 

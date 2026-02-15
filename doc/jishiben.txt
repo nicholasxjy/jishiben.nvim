@@ -66,11 +66,11 @@ Options:
       Default: `"rounded"`
 
   win.width  `number|nil`                                    *jishiben-win.width*
-      Width of the floating window. When nil, auto-calculated (max 60).
+      Width of the floating window. When nil, auto-calculated (max 80).
       Default: `nil`
 
   win.height  `number|nil`                                  *jishiben-win.height*
-      Height of the floating window. When nil, fits the number of notes.
+      Height of the floating window. When nil, auto-calculated (min 20).
       Default: `nil`
 
 ==============================================================================

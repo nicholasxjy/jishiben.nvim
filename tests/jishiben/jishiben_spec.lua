@@ -37,8 +37,8 @@ describe("jishiben", function()
 
   it("renders note as markdown checkbox line with time", function()
     local t = os.time({ year = 2026, month = 2, day = 15, hour = 14, min = 30 })
-    assert.are.same("- [ ] 2026-02-15 14:30 task", module.note_to_line({ text = "task", done = false, created_at = t }))
-    assert.are.same("- [x] 2026-02-15 14:30 task", module.note_to_line({ text = "task", done = true, created_at = t }))
+    assert.are.same("- [ ] **task** 2026-02-15 14:30", module.note_to_line({ text = "task", done = false, created_at = t }))
+    assert.are.same("- [x] **task** 2026-02-15 14:30", module.note_to_line({ text = "task", done = true, created_at = t }))
   end)
 
   it("appends multiple notes to same file", function()

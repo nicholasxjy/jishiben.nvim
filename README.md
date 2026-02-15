@@ -76,11 +76,11 @@ require("jishiben").setup({
 - `win.width`:
   - Type: `number|nil`
   - Description: Floating window width
-  - Default: `nil` (auto-calculated, max 60)
+  - Default: `nil` (auto-calculated, max 80)
 - `win.height`:
   - Type: `number|nil`
   - Description: Floating window height
-  - Default: `nil` (fits the number of notes)
+  - Default: `nil` (auto, min 20)
 
 ## Usage
 
