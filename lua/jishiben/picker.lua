@@ -29,6 +29,7 @@ M.open = function(opts)
 
   Snacks.picker.pick({
     title = "Jishiben",
+    layout = "select",
     items = items,
     format = function(item)
       local status_hl = item.note_done and "DiagnosticOk" or "DiagnosticWarn"
