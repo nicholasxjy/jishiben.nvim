@@ -2,6 +2,8 @@
 
 A lightweight notebook plugin for Neovim. Notes are stored in a single JSON file and displayed in a floating window as a markdown checkbox list.
 
+![demo](assets/demo.gif)
+
 ## Features
 
 - Single JSON file storage
@@ -16,9 +18,18 @@ A lightweight notebook plugin for Neovim. Notes are stored in a single JSON file
 ```lua
 {
   "nicholasxjy/jishiben.nvim",
-  config = function()
-    require("jishiben").setup()
-  end,
+  event = "VeryLazy",
+  opts = {
+    win = {
+      title = "JISHIBEN",
+      width = 40,
+    },
+  },
+  keys = {
+    { "<leader>Ja", "<cmd>JishibenAdd<cr>", desc = "Jishiben Add" },
+    { "<leader>Jp", "<cmd>JishibenOpen<cr>", desc = "Jishiben Open" },
+    { "<leader>Jc", "<cmd>JishibenClear<cr>", desc = "Jishiben Clear" },
+  },
 }
 ```
 
