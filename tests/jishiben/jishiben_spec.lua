@@ -53,4 +53,14 @@ describe("jishiben", function()
 
     vim.fn.delete(path)
   end)
+
+  it("clears all notes", function()
+    local path = make_tmp_file()
+    module.create_note(path, "one")
+    module.create_note(path, "two")
+    assert.are.equal(2, #module.load_notes(path))
+
+    module.clear_all(path)
+    assert.are.equal(0, #module.load_notes(path))
+  end)
 end)

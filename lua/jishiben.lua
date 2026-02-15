@@ -1,13 +1,26 @@
 local module = require("jishiben.module")
 
+---@class JishibenWinConfig
+---@field title string
+---@field title_pos string
+---@field border string|string[]
+---@field width number|nil
+---@field height number|nil
+
 ---@class JishibenConfig
 ---@field storage_path string
+---@field win JishibenWinConfig
 
 local M = {}
 
 ---@type JishibenConfig
 M.config = {
   storage_path = vim.fn.stdpath("data") .. "/jishiben.json",
+  win = {
+    title = " Jishiben ",
+    title_pos = "center",
+    border = "rounded",
+  },
 }
 
 ---@param args JishibenConfig?
@@ -41,8 +54,9 @@ M.open = function()
   vim.bo[buf].buftype = "nofile"
   vim.bo[buf].filetype = "markdown"
 
-  local width = math.min(60, vim.o.columns - 4)
-  local height = math.min(#lines, vim.o.lines - 4)
+  local wc = M.config.win
+  local width = wc.width or math.min(60, vim.o.columns - 4)
+  local height = wc.height or math.min(#lines, vim.o.lines - 4)
   local row = math.floor((vim.o.lines - height) / 2)
   local col = math.floor((vim.o.columns - width) / 2)
 
@@ -53,9 +67,9 @@ M.open = function()
     row = row,
     col = col,
     style = "minimal",
-    border = "rounded",
-    title = " Jishiben ",
-    title_pos = "center",
+    border = wc.border,
+    title = wc.title,
+    title_pos = wc.title_pos,
   })
 
   vim.b[buf].jishiben_ids = note_ids
@@ -117,6 +131,10 @@ M.toggle_item = function()
     return M._toggle_popup_item(buf, M.get_storage_path())
   end
   return false
+end
+
+M.clear_all = function()
+  module.clear_all(M.get_storage_path())
 end
 
 return M

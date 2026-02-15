@@ -72,4 +72,11 @@ M.note_to_line = function(note)
   return checkbox .. time_str .. note.text
 end
 
+---@param path string
+M.clear_all = function(path)
+  if vim.fn.filereadable(path) == 1 then
+    vim.fn.delete(path)
+  end
+end
+
 return M

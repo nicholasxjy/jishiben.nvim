@@ -1,0 +1,85 @@
+*jishiben.txt*    A lightweight notebook plugin for Neovim
+
+==============================================================================
+CONTENTS                                                  *jishiben-contents*
+
+  1. Introduction ............................................. |jishiben|
+  2. Commands ........................................... |jishiben-commands|
+  3. Configuration ................................... |jishiben-configuration|
+  4. Popup keymaps ................................... |jishiben-popup-keymaps|
+
+==============================================================================
+1. INTRODUCTION                                                    *jishiben*
+
+jishiben.nvim is a lightweight notebook plugin for Neovim. Notes are stored
+as JSON and displayed in a floating window with markdown checkbox list format.
+Each entry shows its creation time (yyyy-MM-dd HH:mm).
+
+==============================================================================
+2. COMMANDS                                                *jishiben-commands*
+
+:JishibenAdd [text]                                            *:JishibenAdd*
+    Add a new note. If [text] is omitted, an input prompt is shown.
+
+:JishibenOpen                                                 *:JishibenOpen*
+    Open the floating window to display all notes.
+
+:JishibenToggle                                             *:JishibenToggle*
+    Toggle the checkbox state of the note under the cursor in the popup.
+
+:JishibenClear                                               *:JishibenClear*
+    Clear all notes.
+
+==============================================================================
+3. CONFIGURATION                                      *jishiben-configuration*
+
+Call the setup function to configure the plugin: >lua
+
+    require("jishiben").setup({
+      storage_path = vim.fn.stdpath("data") .. "/jishiben.json",
+      win = {
+        title = " Jishiben ",
+        title_pos = "center",
+        border = "rounded",
+        width = 60,
+        height = 20,
+      },
+    })
+<
+
+Options:
+
+  storage_path  `string`                                *jishiben-storage_path*
+      Path to the JSON file that stores all notes.
+      Default: `vim.fn.stdpath("data") .. "/jishiben.json"`
+
+  win.title  `string`                                      *jishiben-win.title*
+      Title displayed on the floating window border.
+      Default: `" Jishiben "`
+
+  win.title_pos  `string`                              *jishiben-win.title_pos*
+      Position of the title: "left", "center", or "right".
+      Default: `"center"`
+
+  win.border  `string|string[]`                           *jishiben-win.border*
+      Border style for the floating window.
+      Default: `"rounded"`
+
+  win.width  `number|nil`                                    *jishiben-win.width*
+      Width of the floating window. When nil, auto-calculated (max 60).
+      Default: `nil`
+
+  win.height  `number|nil`                                  *jishiben-win.height*
+      Height of the floating window. When nil, fits the number of notes.
+      Default: `nil`
+
+==============================================================================
+4. POPUP KEYMAPS                                      *jishiben-popup-keymaps*
+
+The following keymaps are available inside the popup window:
+
+  <CR>    Toggle the checkbox of the current line.
+  q       Close the popup window.
+
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:
