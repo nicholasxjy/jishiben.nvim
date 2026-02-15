@@ -67,7 +67,7 @@ M.note_to_line = function(note)
   local checkbox = note.done and "- [x] " or "- [ ] "
   local time_str = ""
   if note.created_at then
-    time_str = " " .. os.date("%Y-%m-%d %H:%M", note.created_at)
+    time_str = "    " .. os.date("%Y-%m-%d %H:%M", note.created_at)
   end
   return checkbox .. "**" .. note.text .. "**" .. time_str
 end
