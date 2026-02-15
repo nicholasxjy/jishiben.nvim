@@ -14,6 +14,6 @@ end, { nargs = "*" })
 vim.api.nvim_create_user_command("JishibenToggle", function()
   local ok = jishiben.toggle_item()
   if not ok then
-    vim.notify("Jishiben: current line is not a markdown checkbox", vim.log.levels.WARN)
+    vim.notify("Jishiben: not in a jishiben popup", vim.log.levels.WARN)
   end
 end, {})
