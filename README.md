@@ -1,25 +1,25 @@
 # jishiben.nvim
 
-一个轻量的 Neovim 记事本插件：
+A lightweight notebook plugin for Neovim:
 
-- 所有记录保存在单个 JSON 文件中
-- 使用浮动窗口（popup）展示，markdown list 格式
-- 每条记录显示创建时间（yyyy-MM-dd HH:mm）
-- 在浮动窗口内按 `<CR>` 切换完成状态
+- All notes stored in a single JSON file
+- Displayed in a floating window with markdown checkbox list
+- Each entry shows its creation time (yyyy-MM-dd HH:mm)
+- Press `<CR>` in the popup to toggle completion status
 
-## 功能
+## Commands
 
-- `:JishibenAdd [内容]` — 新增一条待办（不传内容时弹出输入框）
-- `:JishibenOpen` — 浮动窗口展示所有待办
-- `:JishibenToggle` — 在浮动窗口内切换当前行完成状态
-- `:JishibenClear` — 清除所有记录
+- `:JishibenAdd [text]` — Add a new note (prompts for input if text is omitted)
+- `:JishibenOpen` — Open the floating window to display all notes
+- `:JishibenToggle` — Toggle the checkbox of the current line in the popup
+- `:JishibenClear` — Clear all notes
 
-浮动窗口快捷键：
+Popup keymaps:
 
-- `<CR>` 切换 checkbox
-- `q` 关闭窗口
+- `<CR>` Toggle checkbox
+- `q` Close window
 
-## 安装
+## Installation
 
 ### lazy.nvim
 
@@ -43,7 +43,7 @@ use({
 })
 ```
 
-## 配置
+## Configuration
 
 ```lua
 require("jishiben").setup({
@@ -58,53 +58,53 @@ require("jishiben").setup({
 })
 ```
 
-### 配置项
+### Options
 
 - `storage_path`:
-  - 类型：`string`
-  - 说明：JSON 文件路径
-  - 默认值：`vim.fn.stdpath("data") .. "/jishiben.json"`
+  - Type: `string`
+  - Description: Path to the JSON file
+  - Default: `vim.fn.stdpath("data") .. "/jishiben.json"`
 - `win.title`:
-  - 类型：`string`
-  - 默认值：`" Jishiben "`
+  - Type: `string`
+  - Default: `" Jishiben "`
 - `win.title_pos`:
-  - 类型：`string`
-  - 默认值：`"center"`
+  - Type: `string`
+  - Default: `"center"`
 - `win.border`:
-  - 类型：`string|string[]`
-  - 默认值：`"rounded"`
+  - Type: `string|string[]`
+  - Default: `"rounded"`
 - `win.width`:
-  - 类型：`number|nil`
-  - 说明：浮动窗口宽度
-  - 默认值：`nil`（自动计算，最大 60）
+  - Type: `number|nil`
+  - Description: Floating window width
+  - Default: `nil` (auto-calculated, max 60)
 - `win.height`:
-  - 类型：`number|nil`
-  - 说明：浮动窗口高度
-  - 默认值：`nil`（自动适配记录数量）
+  - Type: `number|nil`
+  - Description: Floating window height
+  - Default: `nil` (fits the number of notes)
 
-## 使用示例
+## Usage
 
 ```vim
-:JishibenAdd 买牛奶
-:JishibenAdd 写周报
+:JishibenAdd buy milk
+:JishibenAdd write report
 :JishibenOpen
 ```
 
-浮动窗口中显示：
+The popup displays:
 
 ```markdown
-- [ ] 2026-02-15 14:30 买牛奶
-- [ ] 2026-02-15 14:35 写周报
+- [ ] 2026-02-15 14:30 buy milk
+- [ ] 2026-02-15 14:35 write report
 ```
 
-光标移到任务行按 `<CR>` 即可切换完成状态。
+Move the cursor to a line and press `<CR>` to toggle its completion status.
 
-## 开发与测试
+## Development
 
 ```bash
 make test
 ```
 
-## 许可证
+## License
 
 MIT
