@@ -10,6 +10,7 @@ A lightweight notebook plugin for Neovim. Notes are stored in a single JSON file
 - Floating window (popup) with markdown checkbox list
 - Creation time displayed on each entry
 - Toggle completion with `<CR>`, close with `q`
+- [snacks.nvim](https://github.com/folke/snacks.nvim) picker integration (optional)
 
 ## Installation
 
@@ -51,6 +52,7 @@ use({
 | `:JishibenAdd [text]` | Add a note (prompts if text omitted) |
 | `:JishibenOpen` | Open popup to display all notes |
 | `:JishibenToggle` | Toggle checkbox in popup |
+| `:JishibenPick` | Open notes in snacks.nvim picker |
 | `:JishibenClear` | Clear all notes |
 
 ## Configuration
@@ -95,6 +97,21 @@ The popup displays:
 ```
 
 Move the cursor to a line and press `<CR>` to toggle its status.
+
+## Snacks Picker
+
+If you have [snacks.nvim](https://github.com/folke/snacks.nvim) installed, you can use `:JishibenPick` to browse notes with the fuzzy picker. Press `<CR>` to toggle a note's done state.
+
+```lua
+-- lazy.nvim keys example
+{ "<leader>Jf", "<cmd>JishibenPick<cr>", desc = "Jishiben Pick" },
+```
+
+You can also call it directly from Lua:
+
+```lua
+require("jishiben.picker").open()
+```
 
 ## Development
 

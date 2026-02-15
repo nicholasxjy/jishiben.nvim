@@ -18,6 +18,10 @@ vim.api.nvim_create_user_command("JishibenToggle", function()
   end
 end, {})
 
+vim.api.nvim_create_user_command("JishibenPick", function()
+  require("jishiben.picker").open()
+end, {})
+
 vim.api.nvim_create_user_command("JishibenClear", function()
   jishiben.clear_all()
   vim.notify("Jishiben: all notes cleared")
