@@ -81,6 +81,10 @@ M.open = function()
   vim.keymap.set("n", "q", function()
     vim.api.nvim_win_close(win, true)
   end, { buffer = buf })
+
+  vim.keymap.set("n", "dd", function()
+    M._delete_popup_item(buf, path)
+  end, { buffer = buf })
 end
 
 ---@param buf number
@@ -109,6 +113,37 @@ M._toggle_popup_item = function(buf, path)
   return true
 end
 
+---@param buf number
+---@param path string
+---@return boolean
+M._delete_popup_item = function(buf, path)
+  local ids = vim.b[buf].jishiben_ids
+  if not ids or #ids == 0 then
+    return false
+  end
+
+  local cursor_row = vim.api.nvim_win_get_cursor(0)[1]
+  local id = ids[cursor_row]
+  if not id then
+    return false
+  end
+
+  if not module.delete_note(path, id) then
+    return false
+  end
+
+  table.remove(ids, cursor_row)
+  vim.b[buf].jishiben_ids = ids
+
+  vim.bo[buf].modifiable = true
+  vim.api.nvim_buf_set_lines(buf, cursor_row - 1, cursor_row, false, {})
+  if #ids == 0 then
+    vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "(empty)" })
+  end
+  vim.bo[buf].modifiable = false
+  return true
+end
+
 ---@param text string?
 ---@return boolean
 M.add_note = function(text)
@@ -129,6 +164,16 @@ M.toggle_item = function()
   local ids = vim.b[buf].jishiben_ids
   if ids then
     return M._toggle_popup_item(buf, M.get_storage_path())
+  end
+  return false
+end
+
+---@return boolean
+M.delete_item = function()
+  local buf = vim.api.nvim_get_current_buf()
+  local ids = vim.b[buf].jishiben_ids
+  if ids then
+    return M._delete_popup_item(buf, M.get_storage_path())
   end
   return false
 end

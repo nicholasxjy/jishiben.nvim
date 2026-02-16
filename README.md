@@ -9,7 +9,7 @@ A lightweight notebook plugin for Neovim. Notes are stored in a single JSON file
 - Single JSON file storage
 - Floating window (popup) with markdown checkbox list
 - Creation time displayed on each entry
-- Toggle completion with `<CR>`, close with `q`
+- Toggle completion with `<CR>`, delete with `dd`, close with `q`
 - [snacks.nvim](https://github.com/folke/snacks.nvim) picker integration (optional)
 
 ## Installation
@@ -52,6 +52,7 @@ use({
 | `:JishibenAdd [text]` | Add a note (prompts if text omitted) |
 | `:JishibenOpen` | Open popup to display all notes |
 | `:JishibenToggle` | Toggle checkbox in popup |
+| `:JishibenDelete` | Delete note under cursor in popup |
 | `:JishibenPick` | Open notes in snacks.nvim picker |
 | `:JishibenClear` | Clear all notes |
 
@@ -96,11 +97,13 @@ The popup displays:
 - [ ] **write report**    2026-02-15 14:35
 ```
 
-Move the cursor to a line and press `<CR>` to toggle its status.
+Move the cursor to a line and press `<CR>` to toggle its status, or `dd` to delete it.
 
 ## Snacks Picker
 
-If you have [snacks.nvim](https://github.com/folke/snacks.nvim) installed, you can use `:JishibenPick` to browse notes with the fuzzy picker. Press `<CR>` to toggle a note's done state.
+If you have [snacks.nvim](https://github.com/folke/snacks.nvim) installed, you can use `:JishibenPick` to browse notes with the fuzzy picker. Press `<CR>` to toggle a note's done state, or `<C-x>` to delete it.
+
+![snacks-picker](assets/snacks-picker.png)
 
 ```lua
 -- lazy.nvim keys example

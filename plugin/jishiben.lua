@@ -18,6 +18,13 @@ vim.api.nvim_create_user_command("JishibenToggle", function()
   end
 end, {})
 
+vim.api.nvim_create_user_command("JishibenDelete", function()
+  local ok = jishiben.delete_item()
+  if not ok then
+    vim.notify("Jishiben: not in a jishiben popup", vim.log.levels.WARN)
+  end
+end, {})
+
 vim.api.nvim_create_user_command("JishibenPick", function()
   require("jishiben.picker").open()
 end, {})

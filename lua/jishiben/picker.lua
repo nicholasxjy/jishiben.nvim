@@ -41,6 +41,29 @@ M.open = function(opts)
       }
     end,
     preview = false,
+    actions = {
+      delete_note = function(picker)
+        local item = picker:current()
+        if not item then
+          return
+        end
+        module.delete_note(path, item.note_id)
+        picker:close()
+        M.open(opts)
+      end,
+    },
+    win = {
+      input = {
+        keys = {
+          ["<C-x>"] = { "delete_note", mode = { "n", "i" } },
+        },
+      },
+      list = {
+        keys = {
+          ["<C-x>"] = { "delete_note", mode = { "n" } },
+        },
+      },
+    },
     confirm = function(picker, item)
       if not item then
         return
