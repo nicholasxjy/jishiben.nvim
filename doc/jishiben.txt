@@ -27,6 +27,12 @@ Each entry shows its creation time (yyyy-MM-dd HH:mm).
 :JishibenToggle                                             *:JishibenToggle*
     Toggle the checkbox state of the note under the cursor in the popup.
 
+:JishibenDelete                                             *:JishibenDelete*
+    Delete the note under the cursor in the popup.
+
+:JishibenPick                                                 *:JishibenPick*
+    Open notes in the snacks.nvim picker. Requires snacks.nvim.
+
 :JishibenClear                                               *:JishibenClear*
     Clear all notes.
 
@@ -79,6 +85,7 @@ Options:
 The following keymaps are available inside the popup window:
 
   <CR>    Toggle the checkbox of the current line.
+  dd      Delete the note on the current line.
   q       Close the popup window.
 
 ==============================================================================

@@ -41,6 +41,23 @@ M.open = function(opts)
       }
     end,
     preview = false,
+    actions = {
+      delete_note = function(picker, item)
+        if not item then
+          return
+        end
+        module.delete_note(path, item.note_id)
+        picker:close()
+        M.open(opts)
+      end,
+    },
+    win = {
+      list = {
+        keys = {
+          ["dd"] = { "delete_note", mode = { "n" } },
+        },
+      },
+    },
     confirm = function(picker, item)
       if not item then
         return

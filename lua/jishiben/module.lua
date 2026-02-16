@@ -73,6 +73,21 @@ M.note_to_line = function(note)
 end
 
 ---@param path string
+---@param id string
+---@return boolean
+M.delete_note = function(path, id)
+  local notes = M.load_notes(path)
+  for i, note in ipairs(notes) do
+    if note.id == id then
+      table.remove(notes, i)
+      M.save_notes(path, notes)
+      return true
+    end
+  end
+  return false
+end
+
+---@param path string
 M.clear_all = function(path)
   if vim.fn.filereadable(path) == 1 then
     vim.fn.delete(path)
