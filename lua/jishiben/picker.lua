@@ -53,9 +53,14 @@ M.open = function(opts)
       end,
     },
     win = {
-      list = {
+      input = {
         keys = {
           ["<C-x>"] = { "delete_note", mode = { "n", "i" } },
+        },
+      },
+      list = {
+        keys = {
+          ["<C-x>"] = { "delete_note", mode = { "n" } },
         },
       },
     },
