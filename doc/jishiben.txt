@@ -7,6 +7,7 @@ CONTENTS                                                  *jishiben-contents*
   2. Commands ........................................... |jishiben-commands|
   3. Configuration ................................... |jishiben-configuration|
   4. Popup keymaps ................................... |jishiben-popup-keymaps|
+  5. Snacks Picker keymaps ....................... |jishiben-picker-keymaps|
 
 ==============================================================================
 1. INTRODUCTION                                                    *jishiben*
@@ -87,6 +88,14 @@ The following keymaps are available inside the popup window:
   <CR>    Toggle the checkbox of the current line.
   dd      Delete the note on the current line.
   q       Close the popup window.
+
+==============================================================================
+5. SNACKS PICKER KEYMAPS                              *jishiben-picker-keymaps*
+
+The following keymaps are available inside the snacks.nvim picker:
+
+  <CR>    Toggle the done state of the selected note.
+  <C-x>   Delete the selected note.
 
 ==============================================================================
 vim:tw=78:ts=8:ft=help:norl:

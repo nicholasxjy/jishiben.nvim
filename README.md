@@ -101,7 +101,7 @@ Move the cursor to a line and press `<CR>` to toggle its status, or `dd` to dele
 
 ## Snacks Picker
 
-If you have [snacks.nvim](https://github.com/folke/snacks.nvim) installed, you can use `:JishibenPick` to browse notes with the fuzzy picker. Press `<CR>` to toggle a note's done state, or `dd` to delete it.
+If you have [snacks.nvim](https://github.com/folke/snacks.nvim) installed, you can use `:JishibenPick` to browse notes with the fuzzy picker. Press `<CR>` to toggle a note's done state, or `<C-x>` to delete it.
 
 ![snacks-picker](assets/snacks-picker.png)
 
