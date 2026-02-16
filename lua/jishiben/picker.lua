@@ -42,7 +42,8 @@ M.open = function(opts)
     end,
     preview = false,
     actions = {
-      delete_note = function(picker, item)
+      delete_note = function(picker)
+        local item = picker:current()
         if not item then
           return
         end
