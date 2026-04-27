@@ -13,31 +13,19 @@ M.open = function(opts)
   local jishiben = require("jishiben")
   local path = (opts and opts.path) or jishiben.get_storage_path()
 
-  local notes = module.load_notes(path)
-  local items = {}
-  for _, note in ipairs(notes) do
-    local status = note.done and "[done]" or "[todo]"
-    local time_str = note.created_at and os.date("%Y-%m-%d %H:%M", note.created_at) or ""
-    table.insert(items, {
-      text = note.text .. " " .. status .. " " .. time_str,
-      note_id = note.id,
-      note_text = note.text,
-      note_done = note.done,
-      note_time = time_str,
-    })
-  end
+  local items = module.list_notes(path)
 
   Snacks.picker.pick({
     title = "Jishiben",
     layout = "select",
     items = items,
     format = function(item)
-      local status_hl = item.note_done and "DiagnosticOk" or "DiagnosticWarn"
-      local status = item.note_done and " ✓ " or "   "
+      local status_hl = item.done and "DiagnosticOk" or "DiagnosticWarn"
+      local status = item.done and " ✓ " or "   "
       return {
         { status, status_hl },
-        { item.note_text, "Normal" },
-        { "    " .. item.note_time, "Comment" },
+        { item.text, "Normal" },
+        { string.format("    line %d", item.line_number), "Comment" },
       }
     end,
     preview = false,
@@ -47,7 +35,7 @@ M.open = function(opts)
         if not item then
           return
         end
-        module.delete_note(path, item.note_id)
+        module.delete_line(path, item.line_number)
         picker:close()
         M.open(opts)
       end,
@@ -68,7 +56,7 @@ M.open = function(opts)
       if not item then
         return
       end
-      module.toggle_note(path, item.note_id)
+      module.toggle_note(path, item.line_number)
       picker:close()
       M.open(opts)
     end,

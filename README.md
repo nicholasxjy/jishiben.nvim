@@ -1,16 +1,15 @@
 # jishiben.nvim
 
-A lightweight notebook plugin for Neovim. Notes are stored in a single JSON file and displayed in a floating window as a markdown checkbox list.
+A lightweight notebook plugin for Neovim. Notes are stored in a single markdown file and edited directly inside a floating window.
 
 ![demo](assets/demo.gif)
 
 ## Features
 
-- Single JSON file storage
-- Floating window (popup) with markdown checkbox list
-- Creation time displayed on each entry
-- Toggle completion with `<CR>`, delete with `dd`, close with `q`
-- [snacks.nvim](https://github.com/folke/snacks.nvim) picker integration (optional)
+- Single markdown file storage (`jishiben.md` by default)
+- Floating window opens the real markdown file for direct editing
+- Markdown checkbox workflow stays compatible with normal text editing
+- Optional [snacks.nvim](https://github.com/folke/snacks.nvim) picker for checkbox items only
 
 ## Installation
 
@@ -49,12 +48,12 @@ use({
 
 | Command | Description |
 | --- | --- |
-| `:JishibenAdd [text]` | Add a note (prompts if text omitted) |
-| `:JishibenOpen` | Open popup to display all notes |
-| `:JishibenToggle` | Toggle checkbox in popup |
-| `:JishibenDelete` | Delete note under cursor in popup |
-| `:JishibenPick` | Open notes in snacks.nvim picker |
-| `:JishibenClear` | Clear all notes |
+| `:JishibenAdd [text]` | Append `- [ ] text` to the markdown file |
+| `:JishibenOpen` | Open the real markdown file in a floating window |
+| `:JishibenToggle` | Toggle the checkbox on the current line in `jishiben.md` |
+| `:JishibenDelete` | Delete the current line in `jishiben.md` |
+| `:JishibenPick` | Open checkbox lines in the snacks.nvim picker |
+| `:JishibenClear` | Clear the markdown file |
 
 ## Configuration
 
@@ -62,7 +61,7 @@ All options are optional. Below are the defaults:
 
 ```lua
 require("jishiben").setup({
-  storage_path = vim.fn.stdpath("data") .. "/jishiben.json",
+  storage_path = vim.fn.stdpath("data") .. "/jishiben.md",
   win = {
     title = " Jishiben ",
     title_pos = "center",
@@ -75,8 +74,8 @@ require("jishiben").setup({
 
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
-| `storage_path` | `string` | `stdpath("data") .. "/jishiben.json"` | Path to the JSON file |
-| `win.title` | `string` | `" Jishiben "` | Popup title |
+| `storage_path` | `string` | `stdpath("data") .. "/jishiben.md"` | Path to the markdown file |
+| `win.title` | `string` | `" Jishiben "` | Floating window title |
 | `win.title_pos` | `string` | `"center"` | Title position |
 | `win.border` | `string\|string[]` | `"rounded"` | Border style |
 | `win.width` | `number\|nil` | `nil` | Window width (auto max 80) |
@@ -86,22 +85,25 @@ require("jishiben").setup({
 
 ```vim
 :JishibenAdd buy milk
-:JishibenAdd write report
 :JishibenOpen
 ```
 
-The popup displays:
+Example `jishiben.md`:
 
-```
-- [ ] **buy milk**    2026-02-15 14:30
-- [ ] **write report**    2026-02-15 14:35
+```md
+# Inbox
+
+- [ ] buy milk
+- [x] write report
 ```
 
-Move the cursor to a line and press `<CR>` to toggle its status, or `dd` to delete it.
+When the floating window opens, you are editing the actual markdown file. Use normal markdown editing commands, `:write`, and any file-local tooling you already use. Press `q` to close the floating window; modified content is written before closing.
+
+`JishibenToggle` and `JishibenDelete` are convenience commands for the current line inside the markdown buffer.
 
 ## Snacks Picker
 
-If you have [snacks.nvim](https://github.com/folke/snacks.nvim) installed, you can use `:JishibenPick` to browse notes with the fuzzy picker. Press `<CR>` to toggle a note's done state, or `<C-x>` to delete it.
+If you have [snacks.nvim](https://github.com/folke/snacks.nvim) installed, `:JishibenPick` lists markdown checkbox lines only. Press `<CR>` to toggle a checkbox, or `<C-x>` to delete that checkbox line.
 
 ![snacks-picker](assets/snacks-picker.png)
 

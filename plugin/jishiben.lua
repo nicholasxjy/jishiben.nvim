@@ -14,14 +14,14 @@ end, { nargs = "*" })
 vim.api.nvim_create_user_command("JishibenToggle", function()
   local ok = jishiben.toggle_item()
   if not ok then
-    vim.notify("Jishiben: not in a jishiben popup", vim.log.levels.WARN)
+    vim.notify("Jishiben: not in jishiben markdown buffer or current line is unsupported", vim.log.levels.WARN)
   end
 end, {})
 
 vim.api.nvim_create_user_command("JishibenDelete", function()
   local ok = jishiben.delete_item()
   if not ok then
-    vim.notify("Jishiben: not in a jishiben popup", vim.log.levels.WARN)
+    vim.notify("Jishiben: not in jishiben markdown buffer or current line is unsupported", vim.log.levels.WARN)
   end
 end, {})
 

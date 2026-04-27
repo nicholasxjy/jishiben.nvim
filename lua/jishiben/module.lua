@@ -1,97 +1,174 @@
 local M = {}
 
+local function normalize_path(path)
+  return vim.fn.fnamemodify(path, ":p")
+end
+
+local function get_storage_buf(path)
+  local bufnr = vim.fn.bufnr(normalize_path(path))
+  if bufnr == -1 or not vim.api.nvim_buf_is_valid(bufnr) then
+    return nil
+  end
+  return bufnr
+end
+
+local function write_lines(path, lines)
+  vim.fn.writefile(lines, normalize_path(path))
+end
+
 ---@param path string
----@return table[] notes
-M.load_notes = function(path)
-  if vim.fn.filereadable(path) ~= 1 then
-    return {}
+M.ensure_storage_file = function(path)
+  local normalized = normalize_path(path)
+  local dir = vim.fn.fnamemodify(normalized, ":h")
+  vim.fn.mkdir(dir, "p")
+  if vim.fn.filereadable(normalized) ~= 1 then
+    vim.fn.writefile({}, normalized)
   end
-  local content = vim.fn.readfile(path)
-  if #content == 0 then
-    return {}
+end
+
+---@param path string
+---@return number
+M.ensure_storage_buffer = function(path)
+  local normalized = normalize_path(path)
+  M.ensure_storage_file(normalized)
+  local buf = vim.fn.bufadd(normalized)
+  vim.fn.bufload(buf)
+  vim.bo[buf].filetype = "markdown"
+  vim.bo[buf].bufhidden = "hide"
+  vim.b[buf].jishiben_storage_path = normalized
+  return buf
+end
+
+---@param path string
+---@return string[]
+M.get_lines = function(path)
+  local normalized = normalize_path(path)
+  M.ensure_storage_file(normalized)
+  local buf = get_storage_buf(normalized)
+  if buf and vim.api.nvim_buf_is_loaded(buf) then
+    return vim.api.nvim_buf_get_lines(buf, 0, -1, false)
   end
-  local ok, notes = pcall(vim.fn.json_decode, table.concat(content, ""))
-  if not ok or type(notes) ~= "table" then
-    return {}
+  return vim.fn.readfile(normalized)
+end
+
+---@param path string
+---@param lines string[]
+M.set_lines = function(path, lines)
+  local normalized = normalize_path(path)
+  M.ensure_storage_file(normalized)
+  local buf = get_storage_buf(normalized)
+  if buf and vim.api.nvim_buf_is_loaded(buf) then
+    vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+    vim.api.nvim_buf_call(buf, function()
+      vim.cmd("silent write")
+    end)
+    return
+  end
+  write_lines(normalized, lines)
+end
+
+---@param path string
+---@param buf integer?
+---@return boolean
+M.is_storage_buffer = function(path, buf)
+  local target = normalize_path(path)
+  local current = vim.api.nvim_buf_get_name(buf or vim.api.nvim_get_current_buf())
+  return current ~= "" and normalize_path(current) == target
+end
+
+---@param text string
+---@return string
+M.note_to_line = function(text)
+  return string.format("- [ ] %s", text)
+end
+
+---@param line string
+---@return { text: string, done: boolean }|nil
+M.parse_checkbox_line = function(line)
+  local _, _, prefix, state, text = line:find("^(%s*[-*]%s+)%[([ xX])%]%s*(.*)$")
+  if not prefix then
+    return nil
+  end
+  return {
+    text = text,
+    done = state:lower() == "x",
+  }
+end
+
+---@param line string
+---@return string|nil
+M.toggle_checkbox_line = function(line)
+  local _, _, prefix, state, text = line:find("^(%s*[-*]%s+)%[([ xX])%](.*)$")
+  if not prefix then
+    return nil
+  end
+  local next_state = state:lower() == "x" and " " or "x"
+  return string.format("%s[%s]%s", prefix, next_state, text)
+end
+
+---@param path string
+---@param text string
+M.create_note = function(path, text)
+  local lines = M.get_lines(path)
+  table.insert(lines, M.note_to_line(text))
+  M.set_lines(path, lines)
+end
+
+---@param path string
+---@return { text: string, done: boolean, line_number: integer, raw_line: string }[]
+M.list_notes = function(path)
+  local notes = {}
+  for index, line in ipairs(M.get_lines(path)) do
+    local parsed = M.parse_checkbox_line(line)
+    if parsed then
+      table.insert(notes, {
+        text = parsed.text,
+        done = parsed.done,
+        line_number = index,
+        raw_line = line,
+      })
+    end
   end
   return notes
 end
 
 ---@param path string
----@param notes table[]
-M.save_notes = function(path, notes)
-  local dir = vim.fn.fnamemodify(path, ":h")
-  vim.fn.mkdir(dir, "p")
-  vim.fn.writefile({ vim.fn.json_encode(notes) }, path)
-end
-
----@param path string
----@param text string
----@return table note
-M.create_note = function(path, text)
-  local notes = M.load_notes(path)
-  local note = {
-    id = tostring(vim.loop.hrtime()),
-    text = text,
-    done = false,
-    created_at = os.time(),
-  }
-  table.insert(notes, note)
-  M.save_notes(path, notes)
-  return note
-end
-
----@param path string
----@param id string
----@return table|nil note
-M.toggle_note = function(path, id)
-  local notes = M.load_notes(path)
-  local target = nil
-  for _, note in ipairs(notes) do
-    if note.id == id then
-      note.done = not note.done
-      target = note
-      break
-    end
-  end
-  if not target then
-    return nil
-  end
-  M.save_notes(path, notes)
-  return target
-end
-
----@param note table
----@return string
-M.note_to_line = function(note)
-  local checkbox = note.done and "- [x] " or "- [ ] "
-  local time_str = ""
-  if note.created_at then
-    time_str = "    " .. os.date("%Y-%m-%d %H:%M", note.created_at)
-  end
-  return checkbox .. "**" .. note.text .. "**" .. time_str
-end
-
----@param path string
----@param id string
+---@param line_number integer
 ---@return boolean
-M.delete_note = function(path, id)
-  local notes = M.load_notes(path)
-  for i, note in ipairs(notes) do
-    if note.id == id then
-      table.remove(notes, i)
-      M.save_notes(path, notes)
-      return true
-    end
+M.toggle_note = function(path, line_number)
+  local lines = M.get_lines(path)
+  local line = lines[line_number]
+  if not line then
+    return false
   end
-  return false
+
+  local toggled = M.toggle_checkbox_line(line)
+  if not toggled then
+    return false
+  end
+
+  lines[line_number] = toggled
+  M.set_lines(path, lines)
+  return true
+end
+
+---@param path string
+---@param line_number integer
+---@return boolean
+M.delete_line = function(path, line_number)
+  local lines = M.get_lines(path)
+  if not lines[line_number] then
+    return false
+  end
+
+  table.remove(lines, line_number)
+  M.set_lines(path, lines)
+  return true
 end
 
 ---@param path string
 M.clear_all = function(path)
-  if vim.fn.filereadable(path) == 1 then
-    vim.fn.delete(path)
-  end
+  M.set_lines(path, {})
 end
 
 return M
