@@ -13,76 +13,21 @@ local function close_current_float_if_needed()
   end
 end
 
+local commands = vim.api.nvim_get_commands({ builtin = false })
+if not commands.JishibenOpen then
+  vim.cmd("runtime plugin/jishiben.lua")
+end
+
 describe("jishiben", function()
-  it("creates a note in single markdown file", function()
-    local path = make_tmp_file()
-    plugin.setup({ storage_path = path })
+  it("registers only the supported user commands", function()
+    local user_commands = vim.api.nvim_get_commands({ builtin = false })
 
-    local ok = plugin.add_note("buy milk")
-    assert.is_true(ok)
-
-    assert.are.same({ "- [ ] buy milk" }, module.get_lines(path))
-
-    vim.fn.delete(path)
-  end)
-
-  it("toggles checkbox state in the storage buffer", function()
-    local path = make_tmp_file()
-    plugin.setup({ storage_path = path })
-    module.create_note(path, "write report")
-
-    plugin.open()
-    vim.api.nvim_win_set_cursor(0, { 1, 0 })
-
-    local ok = plugin.toggle_item()
-    assert.is_true(ok)
-    assert.are.same({ "- [x] write report" }, module.get_lines(path))
-
-    close_current_float_if_needed()
-    vim.fn.delete(path)
-  end)
-
-  it("renders note as markdown checkbox line", function()
-    assert.are.same("- [ ] task", module.note_to_line("task"))
-  end)
-
-  it("lists only markdown checkbox lines", function()
-    local path = make_tmp_file()
-    vim.fn.writefile({ "# Inbox", "", "- [ ] first task", "plain text", "- [x] done task" }, path)
-
-    local notes = module.list_notes(path)
-    assert.are.equal(2, #notes)
-    assert.are.equal("first task", notes[1].text)
-    assert.is_false(notes[1].done)
-    assert.are.equal(3, notes[1].line_number)
-    assert.are.equal("done task", notes[2].text)
-    assert.is_true(notes[2].done)
-    assert.are.equal(5, notes[2].line_number)
-
-    vim.fn.delete(path)
-  end)
-
-  it("appends multiple notes to same file", function()
-    local path = make_tmp_file()
-    module.create_note(path, "first")
-    module.create_note(path, "second")
-
-    assert.are.same({ "- [ ] first", "- [ ] second" }, module.get_lines(path))
-
-    vim.fn.delete(path)
-  end)
-
-  it("clears all notes but keeps markdown file", function()
-    local path = make_tmp_file()
-    module.create_note(path, "one")
-    module.create_note(path, "two")
-
-    module.clear_all(path)
-
-    assert.are.equal(1, vim.fn.filereadable(path))
-    assert.are.same({}, module.get_lines(path))
-
-    vim.fn.delete(path)
+    assert.is_table(user_commands.JishibenOpen)
+    assert.is_table(user_commands.JishibenClear)
+    assert.is_nil(user_commands.JishibenAdd)
+    assert.is_nil(user_commands.JishibenDelete)
+    assert.is_nil(user_commands.JishibenPick)
+    assert.is_nil(user_commands.JishibenToggle)
   end)
 
   it("opens the real markdown storage buffer", function()
@@ -94,8 +39,37 @@ describe("jishiben", function()
     local buf = vim.api.nvim_get_current_buf()
     assert.are.equal(vim.fn.fnamemodify(path, ":p"), vim.api.nvim_buf_get_name(buf))
     assert.are.equal("markdown", vim.bo[buf].filetype)
+    assert.are.equal(1, vim.fn.filereadable(path))
 
     close_current_float_if_needed()
+    vim.fn.delete(path)
+  end)
+
+  it("edits the real markdown storage buffer", function()
+    local path = make_tmp_file()
+    plugin.setup({ storage_path = path })
+    vim.fn.writefile({ "# Inbox" }, path)
+
+    plugin.open()
+    local buf = vim.api.nvim_get_current_buf()
+    vim.api.nvim_buf_set_lines(buf, -1, -1, false, { "", "- [ ] write report" })
+
+    close_current_float_if_needed()
+
+    assert.are.same({ "# Inbox", "", "- [ ] write report" }, module.get_lines(path))
+    vim.fn.delete(path)
+  end)
+
+  it("clears all notes but keeps markdown file", function()
+    local path = make_tmp_file()
+    vim.fn.writefile({ "# Inbox", "", "- [ ] one", "- [x] two" }, path)
+
+    plugin.setup({ storage_path = path })
+    plugin.clear_all()
+
+    assert.are.equal(1, vim.fn.filereadable(path))
+    assert.are.same({}, module.get_lines(path))
+
     vim.fn.delete(path)
   end)
 end)

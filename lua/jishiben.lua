@@ -70,42 +70,6 @@ M.open = function()
   end, { buffer = buf })
 end
 
----@param text string?
----@return boolean
-M.add_note = function(text)
-  local content = text
-  if not content or content == "" then
-    content = vim.fn.input("Jishiben: ")
-  end
-  if content == "" then
-    return false
-  end
-  module.create_note(M.get_storage_path(), content)
-  return true
-end
-
----@return boolean
-M.toggle_item = function()
-  local path = M.get_storage_path()
-  local buf = vim.api.nvim_get_current_buf()
-  if not module.is_storage_buffer(path, buf) then
-    return false
-  end
-  local cursor_row = vim.api.nvim_win_get_cursor(0)[1]
-  return module.toggle_note(path, cursor_row)
-end
-
----@return boolean
-M.delete_item = function()
-  local path = M.get_storage_path()
-  local buf = vim.api.nvim_get_current_buf()
-  if not module.is_storage_buffer(path, buf) then
-    return false
-  end
-  local cursor_row = vim.api.nvim_win_get_cursor(0)[1]
-  return module.delete_line(path, cursor_row)
-end
-
 M.clear_all = function()
   module.clear_all(M.get_storage_path())
 end

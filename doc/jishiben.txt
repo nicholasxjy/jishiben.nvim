@@ -7,7 +7,6 @@ CONTENTS                                                  *jishiben-contents*
   2. Commands ........................................... |jishiben-commands|
   3. Configuration ................................... |jishiben-configuration|
   4. Editing ........................................... |jishiben-editing|
-  5. Snacks Picker keymaps ....................... |jishiben-picker-keymaps|
 
 ==============================================================================
 1. INTRODUCTION                                                    *jishiben*
@@ -18,22 +17,8 @@ as markdown in a single file and edited directly inside a floating window.
 ==============================================================================
 2. COMMANDS                                                *jishiben-commands*
 
-:JishibenAdd [text]                                            *:JishibenAdd*
-    Append `- [ ] [text]` to the markdown file. If [text] is omitted, an input
-    prompt is shown.
-
 :JishibenOpen                                                 *:JishibenOpen*
     Open the real markdown storage file in a floating window.
-
-:JishibenToggle                                             *:JishibenToggle*
-    Toggle the checkbox on the current line in the markdown buffer.
-
-:JishibenDelete                                             *:JishibenDelete*
-    Delete the current line in the markdown buffer.
-
-:JishibenPick                                                 *:JishibenPick*
-    Open markdown checkbox lines in the snacks.nvim picker.
-    Requires snacks.nvim.
 
 :JishibenClear                                               *:JishibenClear*
     Clear all content from the markdown file.
@@ -89,18 +74,12 @@ Normal markdown editing works as usual.
 
   q       Close the floating window. Modified content is written first.
 
-Checkbox lines follow standard markdown task-list format, for example:
+Use normal markdown task-list editing directly in the file, for example:
 
   - [ ] inbox item
   - [x] finished item
 
-==============================================================================
-5. SNACKS PICKER KEYMAPS                              *jishiben-picker-keymaps*
-
-The following keymaps are available inside the snacks.nvim picker:
-
-  <CR>    Toggle the selected checkbox line.
-  <C-x>   Delete the selected checkbox line.
+Use |:JishibenClear| to wipe the file content while keeping the markdown file.
 
 ==============================================================================
 vim:tw=78:ts=8:ft=help:norl:
