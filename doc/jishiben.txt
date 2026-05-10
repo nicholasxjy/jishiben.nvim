@@ -36,6 +36,8 @@ Call the setup function to configure the plugin: >lua
         border = "rounded",
         width = 60,
         height = 20,
+        row = 2,
+        col = 10,
       },
     })
 <
@@ -64,6 +66,14 @@ Options:
 
   win.height  `number|nil`                                  *jishiben-win.height*
       Height of the floating window. When nil, auto-calculated (min 20).
+      Default: `nil`
+
+  win.row  `number|nil`                                        *jishiben-win.row*
+      Row offset of the floating window. When nil, centered vertically.
+      Default: `nil`
+
+  win.col  `number|nil`                                        *jishiben-win.col*
+      Column offset of the floating window. When nil, centered horizontally.
       Default: `nil`
 
 ==============================================================================

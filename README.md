@@ -63,6 +63,8 @@ require("jishiben").setup({
     border = "rounded",
     -- width = 80,
     -- height = 20,
+    -- row = 2,
+    -- col = 10,
   },
 })
 ```
@@ -75,6 +77,8 @@ require("jishiben").setup({
 | `win.border` | `string\|string[]` | `"rounded"` | Border style |
 | `win.width` | `number\|nil` | `nil` | Window width (auto max 80) |
 | `win.height` | `number\|nil` | `nil` | Window height (auto min 20) |
+| `win.row` | `number\|nil` | `nil` | Window row offset (auto centered) |
+| `win.col` | `number\|nil` | `nil` | Window column offset (auto centered) |
 
 ## Usage
 

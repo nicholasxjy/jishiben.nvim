@@ -6,6 +6,8 @@ local module = require("jishiben.module")
 ---@field border string|string[]
 ---@field width number|nil
 ---@field height number|nil
+---@field row number|nil
+---@field col number|nil
 
 ---@class JishibenConfig
 ---@field storage_path string
@@ -40,8 +42,8 @@ M.open = function()
   local wc = M.config.win
   local width = wc.width or math.min(80, vim.o.columns - 4)
   local height = wc.height or math.min(math.max(vim.api.nvim_buf_line_count(buf), 20), vim.o.lines - 4)
-  local row = math.floor((vim.o.lines - height) / 2)
-  local col = math.floor((vim.o.columns - width) / 2)
+  local row = wc.row or math.floor((vim.o.lines - height) / 2)
+  local col = wc.col or math.floor((vim.o.columns - width) / 2)
 
   local win = vim.api.nvim_open_win(buf, true, {
     relative = "editor",

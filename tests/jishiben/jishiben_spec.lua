@@ -13,6 +13,13 @@ local function close_current_float_if_needed()
   end
 end
 
+local function normalize_win_coord(value)
+  if type(value) == "table" then
+    return value[false] or value[1]
+  end
+  return value
+end
+
 local commands = vim.api.nvim_get_commands({ builtin = false })
 if not commands.JishibenOpen then
   vim.cmd("runtime plugin/jishiben.lua")
@@ -57,6 +64,32 @@ describe("jishiben", function()
     close_current_float_if_needed()
 
     assert.are.same({ "# Inbox", "", "- [ ] write report" }, module.get_lines(path))
+    vim.fn.delete(path)
+  end)
+
+  it("respects custom floating window position and size", function()
+    local path = make_tmp_file()
+    plugin.setup({
+      storage_path = path,
+      win = {
+        width = 48,
+        height = 12,
+        row = 3,
+        col = 7,
+      },
+    })
+
+    plugin.open()
+
+    local win = vim.api.nvim_get_current_win()
+    local config = vim.api.nvim_win_get_config(win)
+
+    assert.are.equal(48, config.width)
+    assert.are.equal(12, config.height)
+    assert.are.equal(3, normalize_win_coord(config.row))
+    assert.are.equal(7, normalize_win_coord(config.col))
+
+    close_current_float_if_needed()
     vim.fn.delete(path)
   end)
 
