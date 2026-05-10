@@ -2,7 +2,7 @@
 
 A lightweight notebook plugin for Neovim. Notes live in a single markdown file and are edited directly inside a floating window.
 
-![demo](assets/demo.gif)
+![demo](assets/demo1.gif)
 
 ## Features
 
