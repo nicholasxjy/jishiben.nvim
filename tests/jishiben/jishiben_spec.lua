@@ -2,65 +2,107 @@ local module = require("jishiben.module")
 local plugin = require("jishiben")
 
 local function make_tmp_file()
-  return string.format("%s/jishiben-test-%d.json", vim.fn.stdpath("cache"), vim.loop.hrtime())
+  return string.format("%s/jishiben-test-%d.md", vim.fn.stdpath("cache"), vim.loop.hrtime())
+end
+
+local function close_current_float_if_needed()
+  local win = vim.api.nvim_get_current_win()
+  local config = vim.api.nvim_win_get_config(win)
+  if config.relative ~= "" then
+    vim.api.nvim_win_close(win, true)
+  end
+end
+
+local function normalize_win_coord(value)
+  if type(value) == "table" then
+    return value[false] or value[1]
+  end
+  return value
+end
+
+local commands = vim.api.nvim_get_commands({ builtin = false })
+if not commands.JishibenOpen then
+  vim.cmd("runtime plugin/jishiben.lua")
 end
 
 describe("jishiben", function()
-  it("creates a note in single json file", function()
+  it("registers only the supported user commands", function()
+    local user_commands = vim.api.nvim_get_commands({ builtin = false })
+
+    assert.is_table(user_commands.JishibenOpen)
+    assert.is_table(user_commands.JishibenClear)
+    assert.is_nil(user_commands.JishibenAdd)
+    assert.is_nil(user_commands.JishibenDelete)
+    assert.is_nil(user_commands.JishibenPick)
+    assert.is_nil(user_commands.JishibenToggle)
+  end)
+
+  it("opens the real markdown storage buffer", function()
     local path = make_tmp_file()
     plugin.setup({ storage_path = path })
 
-    local ok = plugin.add_note("buy milk")
-    assert.is_true(ok)
+    plugin.open()
 
-    local notes = module.load_notes(path)
-    assert.are.equal(1, #notes)
-    assert.are.equal("buy milk", notes[1].text)
-    assert.is_false(notes[1].done)
+    local buf = vim.api.nvim_get_current_buf()
+    assert.are.equal(vim.fn.fnamemodify(path, ":p"), vim.api.nvim_buf_get_name(buf))
+    assert.are.equal("markdown", vim.bo[buf].filetype)
+    assert.are.equal(1, vim.fn.filereadable(path))
 
+    close_current_float_if_needed()
     vim.fn.delete(path)
   end)
 
-  it("toggles note done state", function()
+  it("edits the real markdown storage buffer", function()
     local path = make_tmp_file()
-    local note = module.create_note(path, "write report")
-    assert.is_false(note.done)
+    plugin.setup({ storage_path = path })
+    vim.fn.writefile({ "# Inbox" }, path)
 
-    local toggled = module.toggle_note(path, note.id)
-    assert.is_true(toggled.done)
+    plugin.open()
+    local buf = vim.api.nvim_get_current_buf()
+    vim.api.nvim_buf_set_lines(buf, -1, -1, false, { "", "- [ ] write report" })
 
-    local toggled2 = module.toggle_note(path, note.id)
-    assert.is_false(toggled2.done)
+    close_current_float_if_needed()
 
+    assert.are.same({ "# Inbox", "", "- [ ] write report" }, module.get_lines(path))
     vim.fn.delete(path)
   end)
 
-  it("renders note as markdown checkbox line with time", function()
-    local t = os.time({ year = 2026, month = 2, day = 15, hour = 14, min = 30 })
-    assert.are.same("- [ ] **task**    2026-02-15 14:30", module.note_to_line({ text = "task", done = false, created_at = t }))
-    assert.are.same("- [x] **task**    2026-02-15 14:30", module.note_to_line({ text = "task", done = true, created_at = t }))
-  end)
-
-  it("appends multiple notes to same file", function()
+  it("respects custom floating window position and size", function()
     local path = make_tmp_file()
-    module.create_note(path, "first")
-    module.create_note(path, "second")
+    plugin.setup({
+      storage_path = path,
+      win = {
+        width = 48,
+        height = 12,
+        row = 3,
+        col = 7,
+      },
+    })
 
-    local notes = module.load_notes(path)
-    assert.are.equal(2, #notes)
-    assert.are.equal("first", notes[1].text)
-    assert.are.equal("second", notes[2].text)
+    plugin.open()
 
+    local win = vim.api.nvim_get_current_win()
+    local config = vim.api.nvim_win_get_config(win)
+
+    assert.are.equal(48, config.width)
+    assert.are.equal(12, config.height)
+    assert.are.equal(3, normalize_win_coord(config.row))
+    assert.are.equal(7, normalize_win_coord(config.col))
+
+    close_current_float_if_needed()
     vim.fn.delete(path)
   end)
 
-  it("clears all notes", function()
+  it("clears all notes but keeps markdown file", function()
     local path = make_tmp_file()
-    module.create_note(path, "one")
-    module.create_note(path, "two")
-    assert.are.equal(2, #module.load_notes(path))
+    vim.fn.writefile({ "# Inbox", "", "- [ ] one", "- [x] two" }, path)
 
-    module.clear_all(path)
-    assert.are.equal(0, #module.load_notes(path))
+    plugin.setup({ storage_path = path })
+    plugin.clear_all()
+
+    assert.are.equal(1, vim.fn.filereadable(path))
+    assert.are.same({}, module.get_lines(path))
+
+    vim.fn.delete(path)
   end)
 end)

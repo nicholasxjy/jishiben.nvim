@@ -1,16 +1,15 @@
 # jishiben.nvim
 
-A lightweight notebook plugin for Neovim. Notes are stored in a single JSON file and displayed in a floating window as a markdown checkbox list.
+A lightweight notebook plugin for Neovim. Notes live in a single markdown file and are edited directly inside a floating window.
 
 ![demo](assets/demo.gif)
 
 ## Features
 
-- Single JSON file storage
-- Floating window (popup) with markdown checkbox list
-- Creation time displayed on each entry
-- Toggle completion with `<CR>`, delete with `dd`, close with `q`
-- [snacks.nvim](https://github.com/folke/snacks.nvim) picker integration (optional)
+- Single markdown file storage (`jishiben.md` by default)
+- Floating window opens the real markdown file for direct editing
+- Minimal command surface: open and clear file
+- Markdown workflow stays compatible with normal text editing
 
 ## Installation
 
@@ -27,7 +26,6 @@ A lightweight notebook plugin for Neovim. Notes are stored in a single JSON file
     },
   },
   keys = {
-    { "<leader>Ja", "<cmd>JishibenAdd<cr>", desc = "Jishiben Add" },
     { "<leader>Jp", "<cmd>JishibenOpen<cr>", desc = "Jishiben Open" },
     { "<leader>Jc", "<cmd>JishibenClear<cr>", desc = "Jishiben Clear" },
   },
@@ -49,12 +47,8 @@ use({
 
 | Command | Description |
 | --- | --- |
-| `:JishibenAdd [text]` | Add a note (prompts if text omitted) |
-| `:JishibenOpen` | Open popup to display all notes |
-| `:JishibenToggle` | Toggle checkbox in popup |
-| `:JishibenDelete` | Delete note under cursor in popup |
-| `:JishibenPick` | Open notes in snacks.nvim picker |
-| `:JishibenClear` | Clear all notes |
+| `:JishibenOpen` | Open the real markdown file in a floating window |
+| `:JishibenClear` | Clear the markdown file |
 
 ## Configuration
 
@@ -62,59 +56,48 @@ All options are optional. Below are the defaults:
 
 ```lua
 require("jishiben").setup({
-  storage_path = vim.fn.stdpath("data") .. "/jishiben.json",
+  storage_path = vim.fn.stdpath("data") .. "/jishiben.md",
   win = {
     title = " Jishiben ",
     title_pos = "center",
     border = "rounded",
     -- width = 80,
     -- height = 20,
+    -- row = 2,
+    -- col = 10,
   },
 })
 ```
 
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
-| `storage_path` | `string` | `stdpath("data") .. "/jishiben.json"` | Path to the JSON file |
-| `win.title` | `string` | `" Jishiben "` | Popup title |
+| `storage_path` | `string` | `stdpath("data") .. "/jishiben.md"` | Path to the markdown file |
+| `win.title` | `string` | `" Jishiben "` | Floating window title |
 | `win.title_pos` | `string` | `"center"` | Title position |
 | `win.border` | `string\|string[]` | `"rounded"` | Border style |
 | `win.width` | `number\|nil` | `nil` | Window width (auto max 80) |
 | `win.height` | `number\|nil` | `nil` | Window height (auto min 20) |
+| `win.row` | `number\|nil` | `nil` | Window row offset (auto centered) |
+| `win.col` | `number\|nil` | `nil` | Window column offset (auto centered) |
 
 ## Usage
 
 ```vim
-:JishibenAdd buy milk
-:JishibenAdd write report
 :JishibenOpen
 ```
 
-The popup displays:
+Example `jishiben.md`:
 
-```
-- [ ] **buy milk**    2026-02-15 14:30
-- [ ] **write report**    2026-02-15 14:35
-```
+```md
+# Inbox
 
-Move the cursor to a line and press `<CR>` to toggle its status, or `dd` to delete it.
-
-## Snacks Picker
-
-If you have [snacks.nvim](https://github.com/folke/snacks.nvim) installed, you can use `:JishibenPick` to browse notes with the fuzzy picker. Press `<CR>` to toggle a note's done state, or `<C-x>` to delete it.
-
-![snacks-picker](assets/snacks-picker.png)
-
-```lua
--- lazy.nvim keys example
-{ "<leader>Jf", "<cmd>JishibenPick<cr>", desc = "Jishiben Pick" },
+- [ ] buy milk
+- [x] write report
 ```
 
-You can also call it directly from Lua:
+When the floating window opens, you are editing the actual markdown file. Add, reorder, rewrite, or toggle items with normal markdown editing commands. Press `q` to close the floating window; modified content is written before closing.
 
-```lua
-require("jishiben.picker").open()
-```
+`JishibenClear` wipes the file content while keeping the file itself.
 
 ## Development
 
