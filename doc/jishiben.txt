@@ -20,6 +20,12 @@ as markdown in a single file and edited directly inside a floating window.
 :JishibenOpen                                                 *:JishibenOpen*
     Open the real markdown storage file in a floating window.
 
+:JishibenNote                                                 *:JishibenNote*
+    Capture a timestamped note under the `## Capture` section.
+
+:JishibenTodo                                                 *:JishibenTodo*
+    Add an unchecked task under the `## Todo` section.
+
 :JishibenClear                                               *:JishibenClear*
     Clear all content from the markdown file.
 
@@ -82,7 +88,10 @@ Options:
 When the floating window opens, you are editing the actual markdown file.
 Normal markdown editing works as usual.
 
-  q       Close the floating window. Modified content is written first.
+  i         Add a timestamped note under `## Capture` and enter Insert mode.
+  o         Add an unchecked task under `## Todo` and enter Insert mode.
+  <Space>x  Toggle the current task between `[ ]` and `[x]`.
+  q         Close the floating window. Modified content is written first.
 
 Use normal markdown task-list editing directly in the file, for example:
 

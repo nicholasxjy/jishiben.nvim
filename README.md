@@ -8,7 +8,8 @@ A lightweight notebook plugin for Neovim. Notes live in a single markdown file a
 
 - Single markdown file storage (`jishiben.md` by default)
 - Floating window opens the real markdown file for direct editing
-- Minimal command surface: open and clear file
+- Quick note and todo capture
+- Buffer-local Vim mappings for adding notes, adding todos, and toggling tasks
 - Markdown workflow stays compatible with normal text editing
 
 ## Installation
@@ -27,6 +28,8 @@ A lightweight notebook plugin for Neovim. Notes live in a single markdown file a
   },
   keys = {
     { "<leader>Jp", "<cmd>JishibenOpen<cr>", desc = "Jishiben Open" },
+    { "<leader>Jn", "<cmd>JishibenNote ", desc = "Jishiben Note" },
+    { "<leader>Jt", "<cmd>JishibenTodo ", desc = "Jishiben Todo" },
     { "<leader>Jc", "<cmd>JishibenClear<cr>", desc = "Jishiben Clear" },
   },
 }
@@ -48,6 +51,8 @@ use({
 | Command | Description |
 | --- | --- |
 | `:JishibenOpen` | Open the real markdown file in a floating window |
+| `:JishibenNote {text}` | Capture a timestamped note under `## Capture` |
+| `:JishibenTodo {text}` | Add an unchecked task under `## Todo` |
 | `:JishibenClear` | Clear the markdown file |
 
 ## Configuration
@@ -96,6 +101,15 @@ Example `jishiben.md`:
 ```
 
 When the floating window opens, you are editing the actual markdown file. Add, reorder, rewrite, or toggle items with normal markdown editing commands. Press `q` to close the floating window; modified content is written before closing.
+
+Buffer-local mappings inside the floating window:
+
+| Key | Action |
+| --- | --- |
+| `i` | Add a timestamped note under `## Capture` and enter Insert mode |
+| `o` | Add an unchecked task under `## Todo` and enter Insert mode |
+| `<Space>x` | Toggle the current task between `[ ]` and `[x]` |
+| `q` | Write modified content and close the floating window |
 
 `JishibenClear` wipes the file content while keeping the file itself.
 

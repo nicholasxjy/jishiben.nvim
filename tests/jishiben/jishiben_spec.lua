@@ -30,6 +30,8 @@ describe("jishiben", function()
     local user_commands = vim.api.nvim_get_commands({ builtin = false })
 
     assert.is_table(user_commands.JishibenOpen)
+    assert.is_table(user_commands.JishibenNote)
+    assert.is_table(user_commands.JishibenTodo)
     assert.is_table(user_commands.JishibenClear)
     assert.is_nil(user_commands.JishibenAdd)
     assert.is_nil(user_commands.JishibenDelete)
@@ -52,10 +54,38 @@ describe("jishiben", function()
     vim.fn.delete(path)
   end)
 
+  it("initializes the redesigned markdown sections for an empty file", function()
+    local path = make_tmp_file()
+    plugin.setup({ storage_path = path })
+
+    plugin.open()
+
+    assert.are.same({
+      "# Inbox",
+      "",
+      "## Capture",
+      "",
+      "## Todo",
+      "",
+      "## Later",
+    }, module.get_lines(path))
+
+    close_current_float_if_needed()
+    vim.fn.delete(path)
+  end)
+
   it("edits the real markdown storage buffer", function()
     local path = make_tmp_file()
     plugin.setup({ storage_path = path })
-    vim.fn.writefile({ "# Inbox" }, path)
+    vim.fn.writefile({
+      "# Inbox",
+      "",
+      "## Capture",
+      "",
+      "## Todo",
+      "",
+      "## Later",
+    }, path)
 
     plugin.open()
     local buf = vim.api.nvim_get_current_buf()
@@ -63,7 +93,59 @@ describe("jishiben", function()
 
     close_current_float_if_needed()
 
-    assert.are.same({ "# Inbox", "", "- [ ] write report" }, module.get_lines(path))
+    assert.are.same({
+      "# Inbox",
+      "",
+      "## Capture",
+      "",
+      "## Todo",
+      "",
+      "## Later",
+      "",
+      "- [ ] write report",
+    }, module.get_lines(path))
+    vim.fn.delete(path)
+  end)
+
+  it("captures notes and todos under their markdown sections", function()
+    local path = make_tmp_file()
+    plugin.setup({ storage_path = path })
+
+    plugin.add_note("idea")
+    plugin.add_todo("write report")
+
+    local lines = module.get_lines(path)
+    assert.matches("^%- %d%d:%d%d  idea$", lines[4])
+    assert.are.equal("- [ ] write report", lines[7])
+
+    vim.fn.delete(path)
+  end)
+
+  it("toggles the current todo line", function()
+    local path = make_tmp_file()
+    plugin.setup({ storage_path = path })
+    vim.fn.writefile({
+      "# Inbox",
+      "",
+      "## Capture",
+      "",
+      "## Todo",
+      "- [ ] write report",
+      "",
+      "## Later",
+    }, path)
+
+    plugin.open()
+    local buf = vim.api.nvim_get_current_buf()
+    vim.api.nvim_win_set_cursor(0, { 6, 0 })
+
+    plugin.toggle_todo()
+    assert.are.equal("- [x] write report", vim.api.nvim_buf_get_lines(buf, 5, 6, false)[1])
+
+    plugin.toggle_todo()
+    assert.are.equal("- [ ] write report", vim.api.nvim_buf_get_lines(buf, 5, 6, false)[1])
+
+    close_current_float_if_needed()
     vim.fn.delete(path)
   end)
 
