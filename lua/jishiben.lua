@@ -163,7 +163,7 @@ M.open = function()
   if vim.fn.has("nvim-0.10") == 1 then
     sidebar_config.footer = " [Enter] open "
     sidebar_config.footer_pos = "center"
-    content_config.footer = " [n] notes  [t] todos  / search  q write+close "
+    content_config.footer = " [n] notes  [t] todos  q write+close "
     content_config.footer_pos = "center"
   end
 
