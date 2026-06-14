@@ -1,16 +1,16 @@
 # jishiben.nvim
 
-A lightweight notebook plugin for Neovim. Notes live in a single markdown file and are edited from a two-pane TUI floating layout.
+A lightweight notebook plugin for Neovim. Notes and todos live in separate markdown files and are edited from a two-pane TUI floating layout.
 
 ![demo](assets/demo1.gif)
 
 ## Features
 
-- Single markdown file storage (`jishiben.md` by default)
+- Separate markdown files for notes and todos
 - TUI layout with a left sidebar for `Notes` and `Todos`
-- Right content pane edits the selected section directly
+- Right content pane opens the selected markdown file directly
 - Quick note and todo capture
-- Buffer-local mappings for switching sections, adding notes, adding todos, and toggling tasks
+- Buffer-local mappings for switching files
 - Markdown workflow stays compatible with normal text editing
 
 ## Installation
@@ -51,10 +51,10 @@ use({
 
 | Command | Description |
 | --- | --- |
-| `:JishibenOpen` | Open the real markdown file in a floating window |
-| `:JishibenNote {text}` | Capture a timestamped note under `## Capture` |
-| `:JishibenTodo {text}` | Add an unchecked task under `## Todo` |
-| `:JishibenClear` | Clear the markdown file |
+| `:JishibenOpen` | Open the sidebar and markdown content pane |
+| `:JishibenNote {text}` | Append raw text to the notes file |
+| `:JishibenTodo {text}` | Append raw text to the todos file |
+| `:JishibenClear` | Clear both markdown files |
 
 ## Configuration
 
@@ -62,7 +62,8 @@ All options are optional. Below are the defaults:
 
 ```lua
 require("jishiben").setup({
-  storage_path = vim.fn.stdpath("data") .. "/jishiben.md",
+  notes_path = vim.fn.stdpath("data") .. "/jishiben/notes.md",
+  todos_path = vim.fn.stdpath("data") .. "/jishiben/todos.md",
   win = {
     title = " jishiben.nvim ",
     title_pos = "center",
@@ -77,7 +78,8 @@ require("jishiben").setup({
 
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
-| `storage_path` | `string` | `stdpath("data") .. "/jishiben.md"` | Path to the markdown file |
+| `notes_path` | `string` | `stdpath("data") .. "/jishiben/notes.md"` | Path to the notes markdown file |
+| `todos_path` | `string` | `stdpath("data") .. "/jishiben/todos.md"` | Path to the todos markdown file |
 | `win.title` | `string` | `" jishiben.nvim "` | Sidebar floating window title |
 | `win.title_pos` | `string` | `"center"` | Title position |
 | `win.border` | `string\|string[]` | `"single"` | Border style |
@@ -92,29 +94,31 @@ require("jishiben").setup({
 :JishibenOpen
 ```
 
-`JishibenOpen` creates a left sidebar and a right content pane. The sidebar lists `Notes` and `Todos`; the right pane title follows the selected section and its buffer is editable. `:write`, switching sections, and `q` sync the right pane back to the markdown storage file.
+`JishibenOpen` creates a left sidebar and a right content pane. The sidebar lists `Notes` and `Todos`; the right pane opens either `notes.md` or `todos.md` as a normal markdown buffer. Use any markdown structure you want.
 
-Example `jishiben.md`:
+Example `notes.md`:
 
 ```md
-# Jishiben
+# Ideas
 
-## Notes
-- 09:30  idea
-
-## Todos
-- [ ] write report
+- Draft plugin README
 ```
 
-When the floating layout opens, normal editing happens in the right content pane. Add, reorder, rewrite, or toggle items with normal markdown editing commands. Press `q` to close both panes; modified content is written before closing.
+Example `todos.md`:
+
+```md
+- [ ] write report
+- call Alice
+```
+
+When the floating layout opens, normal editing happens in the right content pane. Add, reorder, or rewrite content with normal markdown editing commands. Press `q` to close both panes; modified content is written before closing.
 
 Content pane mappings:
 
 | Key | Action |
 | --- | --- |
-| `n` | Add a timestamped note under `Notes` and enter Insert mode |
-| `t` | Add an unchecked task under `Todos` and enter Insert mode |
-| `<Space>x` | Toggle the current task between `[ ]` and `[x]` |
+| `n` | Open `Notes` |
+| `t` | Open `Todos` |
 | `q` | Write modified content and close the floating layout |
 
 Sidebar mappings:
@@ -126,7 +130,7 @@ Sidebar mappings:
 | `t` | Open `Todos` |
 | `q` | Write modified content and close the floating layout |
 
-`JishibenClear` wipes the file content while keeping the file itself.
+`JishibenClear` wipes both markdown files while keeping the files themselves.
 
 ## Development
 

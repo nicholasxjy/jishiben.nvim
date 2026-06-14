@@ -11,23 +11,24 @@ CONTENTS                                                  *jishiben-contents*
 ==============================================================================
 1. INTRODUCTION                                                    *jishiben*
 
-jishiben.nvim is a lightweight notebook plugin for Neovim. Notes are stored
-as markdown in a single file and edited from a two-pane TUI floating layout.
+jishiben.nvim is a lightweight notebook plugin for Neovim. Notes and todos
+are stored in separate markdown files and edited from a two-pane TUI floating
+layout.
 
 ==============================================================================
 2. COMMANDS                                                *jishiben-commands*
 
 :JishibenOpen                                                 *:JishibenOpen*
-    Open the sidebar and editable content pane.
+    Open the sidebar and markdown content pane.
 
 :JishibenNote                                                 *:JishibenNote*
-    Capture a timestamped note under the `## Notes` section.
+    Append raw text to the notes file.
 
 :JishibenTodo                                                 *:JishibenTodo*
-    Add an unchecked task under the `## Todos` section.
+    Append raw text to the todos file.
 
 :JishibenClear                                               *:JishibenClear*
-    Clear all content from the markdown file.
+    Clear both markdown files.
 
 ==============================================================================
 3. CONFIGURATION                                      *jishiben-configuration*
@@ -35,7 +36,8 @@ as markdown in a single file and edited from a two-pane TUI floating layout.
 Call the setup function to configure the plugin: >lua
 
     require("jishiben").setup({
-      storage_path = vim.fn.stdpath("data") .. "/jishiben.md",
+      notes_path = vim.fn.stdpath("data") .. "/jishiben/notes.md",
+      todos_path = vim.fn.stdpath("data") .. "/jishiben/todos.md",
       win = {
         title = " jishiben.nvim ",
         title_pos = "center",
@@ -50,9 +52,13 @@ Call the setup function to configure the plugin: >lua
 
 Options:
 
-  storage_path  `string`                                *jishiben-storage_path*
-      Path to the markdown file that stores all notes.
-      Default: `vim.fn.stdpath("data") .. "/jishiben.md"`
+  notes_path  `string`                                    *jishiben-notes_path*
+      Path to the notes markdown file.
+      Default: `vim.fn.stdpath("data") .. "/jishiben/notes.md"`
+
+  todos_path  `string`                                    *jishiben-todos_path*
+      Path to the todos markdown file.
+      Default: `vim.fn.stdpath("data") .. "/jishiben/todos.md"`
 
   win.title  `string`                                      *jishiben-win.title*
       Title displayed on the sidebar floating window border.
@@ -85,15 +91,14 @@ Options:
 ==============================================================================
 4. EDITING                                                    *jishiben-editing*
 
-When the floating layout opens, the left pane lists sections and the right
-pane edits the selected section content. Normal markdown editing works in the
-right pane.
+When the floating layout opens, the left pane lists files and the right pane
+opens the selected markdown file. Normal markdown editing works in the right
+pane. The plugin does not require any specific markdown structure.
 
 Right pane mappings:
 
-  n         Add a timestamped note under `Notes` and enter Insert mode.
-  t         Add an unchecked task under `Todos` and enter Insert mode.
-  <Space>x  Toggle the current task between `[ ]` and `[x]`.
+  n         Open `Notes`.
+  t         Open `Todos`.
   q         Close the floating layout. Modified content is written first.
 
 Sidebar mappings:
@@ -103,16 +108,15 @@ Sidebar mappings:
   t         Open `Todos`.
   q         Close the floating layout. Modified content is written first.
 
-Use normal markdown task-list editing directly in the file, for example:
+Use normal markdown editing directly in each file, for example:
 
-  ## Notes
-  - 09:30  inbox idea
+  # Ideas
+  - Draft plugin README
 
-  ## Todos
   - [ ] inbox item
   - [x] finished item
 
-Use |:JishibenClear| to wipe the file content while keeping the markdown file.
+Use |:JishibenClear| to wipe both files while keeping the markdown files.
 
 ==============================================================================
 vim:tw=78:ts=8:ft=help:norl:

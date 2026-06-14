@@ -1,19 +1,5 @@
 local M = {}
 
-M.default_lines = {
-  "# Jishiben",
-  "",
-  "## Notes",
-  "",
-  "## Todos",
-  "",
-}
-
-M.headings = {
-  notes = "## Notes",
-  todos = "## Todos",
-}
-
 local function normalize_path(path)
   return vim.fn.fnamemodify(path, ":p")
 end
@@ -24,72 +10,6 @@ local function get_storage_buf(path)
     return nil
   end
   return bufnr
-end
-
-local function write_lines(path, lines)
-  vim.fn.writefile(lines, normalize_path(path))
-end
-
-M.is_empty_lines = function(lines)
-  return #lines == 0 or (#lines == 1 and lines[1] == "")
-end
-
-local function find_line(lines, target)
-  for index, line in ipairs(lines) do
-    if line == target then
-      return index
-    end
-  end
-  return nil
-end
-
-M.ensure_heading = function(lines, heading)
-  local index = find_line(lines, heading)
-  if index then
-    return index
-  end
-
-  if #lines > 0 and lines[#lines] ~= "" then
-    table.insert(lines, "")
-  end
-  table.insert(lines, heading)
-  table.insert(lines, "")
-  return #lines - 1
-end
-
-M.ensure_sections = function(lines)
-  if M.is_empty_lines(lines) then
-    return vim.deepcopy(M.default_lines)
-  end
-
-  local next_lines = vim.deepcopy(lines)
-  M.ensure_heading(next_lines, "# Jishiben")
-  M.ensure_heading(next_lines, M.headings.notes)
-  M.ensure_heading(next_lines, M.headings.todos)
-  return next_lines
-end
-
-M.section_bounds = function(lines, heading)
-  local heading_index = M.ensure_heading(lines, heading)
-  local next_heading = #lines + 1
-
-  for index = heading_index + 1, #lines do
-    if lines[index]:match("^##%s+") then
-      next_heading = index
-      break
-    end
-  end
-
-  return heading_index + 1, next_heading
-end
-
-M.section_insert_index = function(lines, heading)
-  local body_start, next_heading = M.section_bounds(lines, heading)
-
-  if next_heading > body_start and lines[next_heading - 1] == "" then
-    return next_heading - 1
-  end
-  return next_heading
 end
 
 ---@param path string
@@ -111,7 +31,7 @@ M.ensure_storage_buffer = function(path)
   vim.fn.bufload(buf)
   vim.bo[buf].filetype = "markdown"
   vim.bo[buf].bufhidden = "hide"
-  vim.b[buf].jishiben_storage_path = normalized
+  vim.b[buf].jishiben_file_path = normalized
   return buf
 end
 
@@ -140,72 +60,15 @@ M.set_lines = function(path, lines)
     end)
     return
   end
-  write_lines(normalized, lines)
+  vim.fn.writefile(lines, normalized)
 end
 
 ---@param path string
-M.ensure_default_content = function(path)
-  local lines = M.get_lines(path)
-  if not M.is_empty_lines(lines) then
-    return
-  end
-
-  M.set_lines(path, M.default_lines)
-end
-
----@param path string
----@param heading string
 ---@param line string
-M.insert_under_heading = function(path, heading, line)
-  local lines = M.ensure_sections(M.get_lines(path))
-  local insert_index = M.section_insert_index(lines, heading)
-  table.insert(lines, insert_index, line)
+M.append_line = function(path, line)
+  local lines = M.get_lines(path)
+  table.insert(lines, line)
   M.set_lines(path, lines)
-end
-
----@param path string
----@param heading string
----@return string[]
-M.get_section_lines = function(path, heading)
-  local lines = M.ensure_sections(M.get_lines(path))
-  local body_start, next_heading = M.section_bounds(lines, heading)
-  local section_lines = {}
-
-  for index = body_start, next_heading - 1 do
-    table.insert(section_lines, lines[index])
-  end
-
-  return section_lines
-end
-
----@param path string
----@param heading string
----@param section_lines string[]
-M.set_section_lines = function(path, heading, section_lines)
-  local lines = M.ensure_sections(M.get_lines(path))
-  local body_start, next_heading = M.section_bounds(lines, heading)
-  local next_section_lines = vim.deepcopy(section_lines)
-
-  if M.is_empty_lines(next_section_lines) then
-    next_section_lines = { "" }
-  elseif next_section_lines[#next_section_lines] ~= "" then
-    table.insert(next_section_lines, "")
-  end
-
-  for _ = body_start, next_heading - 1 do
-    table.remove(lines, body_start)
-  end
-
-  for offset, line in ipairs(next_section_lines) do
-    table.insert(lines, body_start + offset - 1, line)
-  end
-
-  M.set_lines(path, lines)
-end
-
----@param path string
-M.clear_all = function(path)
-  M.set_lines(path, {})
 end
 
 return M

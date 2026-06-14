@@ -1,8 +1,13 @@
 local module = require("jishiben.module")
 local plugin = require("jishiben")
 
-local function make_tmp_file()
-  return string.format("%s/jishiben-test-%d.md", vim.fn.stdpath("cache"), vim.loop.hrtime())
+local function make_tmp_paths()
+  local dir = string.format("%s/jishiben-test-%d", vim.fn.stdpath("cache"), vim.loop.hrtime())
+  return {
+    dir = dir,
+    notes = dir .. "/notes.md",
+    todos = dir .. "/todos.md",
+  }
 end
 
 local function floating_windows()
@@ -30,6 +35,32 @@ local function normalize_win_coord(value)
   return value
 end
 
+local function setup_tmp(paths)
+  plugin.setup({
+    notes_path = paths.notes,
+    todos_path = paths.todos,
+  })
+end
+
+local function find_sidebar()
+  for _, win in ipairs(floating_windows()) do
+    local buf = vim.api.nvim_win_get_buf(win)
+    if vim.bo[buf].buftype == "nofile" then
+      return win, buf
+    end
+  end
+  return nil, nil
+end
+
+local function keymap_callback(buf, lhs)
+  for _, keymap in ipairs(vim.api.nvim_buf_get_keymap(buf, "n")) do
+    if keymap.lhs == lhs then
+      return keymap.callback
+    end
+  end
+  return nil
+end
+
 local commands = vim.api.nvim_get_commands({ builtin = false })
 if not commands.JishibenOpen then
   vim.cmd("runtime plugin/jishiben.lua")
@@ -49,118 +80,88 @@ describe("jishiben", function()
     assert.is_nil(user_commands.JishibenToggle)
   end)
 
-  it("opens a sidebar and editable content pane", function()
-    local path = make_tmp_file()
-    plugin.setup({ storage_path = path })
+  it("creates notes and todos markdown files", function()
+    local paths = make_tmp_paths()
+    setup_tmp(paths)
 
     plugin.open()
 
-    local content_buf = vim.api.nvim_get_current_buf()
-    assert.matches("^jishiben://notes/%d+$", vim.api.nvim_buf_get_name(content_buf))
-    assert.are.equal("markdown", vim.bo[content_buf].filetype)
-    assert.are.equal("acwrite", vim.bo[content_buf].buftype)
-    assert.are.equal(1, vim.fn.filereadable(path))
+    assert.are.equal(1, vim.fn.filereadable(paths.notes))
+    assert.are.equal(1, vim.fn.filereadable(paths.todos))
     assert.are.equal(2, #floating_windows())
 
     close_all_floats()
-    vim.fn.delete(path)
+    vim.fn.delete(paths.dir, "rf")
   end)
 
-  it("initializes notes and todos sections for an empty file", function()
-    local path = make_tmp_file()
-    plugin.setup({ storage_path = path })
+  it("opens the notes markdown file in the content pane", function()
+    local paths = make_tmp_paths()
+    setup_tmp(paths)
 
     plugin.open()
 
-    assert.are.same({
-      "# Jishiben",
-      "",
-      "## Notes",
-      "",
-      "## Todos",
-      "",
-    }, module.get_lines(path))
+    local buf = vim.api.nvim_get_current_buf()
+    assert.are.equal(vim.fn.fnamemodify(paths.notes, ":p"), vim.api.nvim_buf_get_name(buf))
+    assert.are.equal("markdown", vim.bo[buf].filetype)
+    assert.are.equal("", vim.bo[buf].buftype)
 
     close_all_floats()
-    vim.fn.delete(path)
+    vim.fn.delete(paths.dir, "rf")
   end)
 
-  it("edits the current section from the content pane", function()
-    local path = make_tmp_file()
-    plugin.setup({ storage_path = path })
-    vim.fn.writefile({
-      "# Jishiben",
-      "",
-      "## Notes",
-      "",
-      "## Todos",
-      "",
-    }, path)
+  it("switches the content pane to the todos markdown file", function()
+    local paths = make_tmp_paths()
+    setup_tmp(paths)
+
+    plugin.open()
+    local sidebar_win, sidebar_buf = find_sidebar()
+    assert.is_number(sidebar_win)
+    assert.is_number(sidebar_buf)
+
+    vim.api.nvim_set_current_win(sidebar_win)
+    vim.api.nvim_win_set_cursor(sidebar_win, { 4, 0 })
+    keymap_callback(sidebar_buf, "<CR>")()
+
+    local buf = vim.api.nvim_get_current_buf()
+    assert.are.equal(vim.fn.fnamemodify(paths.todos, ":p"), vim.api.nvim_buf_get_name(buf))
+
+    close_all_floats()
+    vim.fn.delete(paths.dir, "rf")
+  end)
+
+  it("edits the real notes markdown file", function()
+    local paths = make_tmp_paths()
+    setup_tmp(paths)
 
     plugin.open()
     local buf = vim.api.nvim_get_current_buf()
-    vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "- 10:00  idea" })
+    vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "# Any markdown", "", "- free-form note" })
     vim.cmd("write")
 
     close_all_floats()
 
-    assert.are.same({
-      "# Jishiben",
-      "",
-      "## Notes",
-      "- 10:00  idea",
-      "",
-      "## Todos",
-      "",
-    }, module.get_lines(path))
-    vim.fn.delete(path)
+    assert.are.same({ "# Any markdown", "", "- free-form note" }, module.get_lines(paths.notes))
+    vim.fn.delete(paths.dir, "rf")
   end)
 
-  it("captures notes and todos under their markdown sections", function()
-    local path = make_tmp_file()
-    plugin.setup({ storage_path = path })
+  it("captures raw notes and todos in separate files", function()
+    local paths = make_tmp_paths()
+    setup_tmp(paths)
 
-    plugin.add_note("idea")
-    plugin.add_todo("write report")
+    plugin.add_note("# idea")
+    plugin.add_todo("- buy milk")
 
-    local lines = module.get_lines(path)
-    assert.matches("^%- %d%d:%d%d  idea$", lines[4])
-    assert.are.equal("- [ ] write report", lines[7])
+    assert.are.same({ "# idea" }, module.get_lines(paths.notes))
+    assert.are.same({ "- buy milk" }, module.get_lines(paths.todos))
 
-    vim.fn.delete(path)
-  end)
-
-  it("toggles the current todo line", function()
-    local path = make_tmp_file()
-    plugin.setup({ storage_path = path })
-    vim.fn.writefile({
-      "# Jishiben",
-      "",
-      "## Notes",
-      "- [ ] write report",
-      "",
-      "## Todos",
-      "",
-    }, path)
-
-    plugin.open()
-    local buf = vim.api.nvim_get_current_buf()
-    vim.api.nvim_win_set_cursor(0, { 1, 0 })
-
-    plugin.toggle_todo()
-    assert.are.equal("- [x] write report", vim.api.nvim_buf_get_lines(buf, 0, 1, false)[1])
-
-    plugin.toggle_todo()
-    assert.are.equal("- [ ] write report", vim.api.nvim_buf_get_lines(buf, 0, 1, false)[1])
-
-    close_all_floats()
-    vim.fn.delete(path)
+    vim.fn.delete(paths.dir, "rf")
   end)
 
   it("respects custom floating window position and size", function()
-    local path = make_tmp_file()
+    local paths = make_tmp_paths()
     plugin.setup({
-      storage_path = path,
+      notes_path = paths.notes,
+      todos_path = paths.todos,
       win = {
         width = 48,
         height = 12,
@@ -180,19 +181,23 @@ describe("jishiben", function()
     assert.are.equal(26, normalize_win_coord(config.col))
 
     close_all_floats()
-    vim.fn.delete(path)
+    vim.fn.delete(paths.dir, "rf")
   end)
 
-  it("clears all notes but keeps markdown file", function()
-    local path = make_tmp_file()
-    vim.fn.writefile({ "# Inbox", "", "- [ ] one", "- [x] two" }, path)
+  it("clears notes and todos but keeps both markdown files", function()
+    local paths = make_tmp_paths()
+    vim.fn.mkdir(paths.dir, "p")
+    vim.fn.writefile({ "one" }, paths.notes)
+    vim.fn.writefile({ "two" }, paths.todos)
 
-    plugin.setup({ storage_path = path })
+    setup_tmp(paths)
     plugin.clear_all()
 
-    assert.are.equal(1, vim.fn.filereadable(path))
-    assert.are.same({}, module.get_lines(path))
+    assert.are.equal(1, vim.fn.filereadable(paths.notes))
+    assert.are.equal(1, vim.fn.filereadable(paths.todos))
+    assert.are.same({}, module.get_lines(paths.notes))
+    assert.are.same({}, module.get_lines(paths.todos))
 
-    vim.fn.delete(path)
+    vim.fn.delete(paths.dir, "rf")
   end)
 end)

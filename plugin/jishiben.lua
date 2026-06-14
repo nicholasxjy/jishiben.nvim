@@ -6,7 +6,7 @@ end, {})
 
 vim.api.nvim_create_user_command("JishibenNote", function(opts)
   jishiben.add_note(opts.args)
-  vim.notify("Jishiben: note captured")
+  vim.notify("Jishiben: note added")
 end, { nargs = "*" })
 
 vim.api.nvim_create_user_command("JishibenTodo", function(opts)
@@ -16,5 +16,5 @@ end, { nargs = "*" })
 
 vim.api.nvim_create_user_command("JishibenClear", function()
   jishiben.clear_all()
-  vim.notify("Jishiben: all notes cleared")
+  vim.notify("Jishiben: notes and todos cleared")
 end, {})

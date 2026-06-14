@@ -10,14 +10,18 @@ local module = require("jishiben.module")
 ---@field col number|nil
 
 ---@class JishibenConfig
----@field storage_path string
+---@field notes_path string
+---@field todos_path string
 ---@field win JishibenWinConfig
+
+local data_dir = vim.fn.stdpath("data") .. "/jishiben"
 
 local M = {}
 
 ---@type JishibenConfig
 M.config = {
-  storage_path = vim.fn.stdpath("data") .. "/jishiben.md",
+  notes_path = data_dir .. "/notes.md",
+  todos_path = data_dir .. "/todos.md",
   win = {
     title = " jishiben.nvim ",
     title_pos = "center",
@@ -25,54 +29,37 @@ M.config = {
   },
 }
 
-local sections = {
-  {
-    id = "notes",
-    label = "Notes",
-    heading = module.headings.notes,
-    prefix = function()
-      return "- " .. os.date("%H:%M") .. "  "
-    end,
-  },
-  {
-    id = "todos",
-    label = "Todos",
-    heading = module.headings.todos,
-    prefix = function()
-      return "- [ ] "
-    end,
-  },
-}
+local function sections()
+  return {
+    {
+      id = "notes",
+      label = "Notes",
+      path = M.config.notes_path,
+    },
+    {
+      id = "todos",
+      label = "Todos",
+      path = M.config.todos_path,
+    },
+  }
+end
 
 local function section_by_id(id)
-  for _, section in ipairs(sections) do
+  for _, section in ipairs(sections()) do
     if section.id == id then
       return section
     end
   end
-  return sections[1]
+  return sections()[1]
 end
 
 local function section_by_label(label)
-  for _, section in ipairs(sections) do
+  for _, section in ipairs(sections()) do
     if section.label == label then
       return section
     end
   end
-  return sections[1]
-end
-
-local function start_insert_at(lnum, col)
-  vim.api.nvim_win_set_cursor(0, { lnum, col })
-  vim.cmd("startinsert")
-end
-
-local function note_prefix()
-  return sections[1].prefix()
-end
-
-local function todo_prefix()
-  return sections[2].prefix()
+  return sections()[1]
 end
 
 ---@param args JishibenConfig?
@@ -81,8 +68,13 @@ M.setup = function(args)
 end
 
 ---@return string
-M.get_storage_path = function()
-  return M.config.storage_path
+M.get_notes_path = function()
+  return M.config.notes_path
+end
+
+---@return string
+M.get_todos_path = function()
+  return M.config.todos_path
 end
 
 local function set_content_title(win, title)
@@ -96,34 +88,10 @@ local function set_content_title(win, title)
   })
 end
 
-local function content_lines(buf)
-  local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
-  if module.is_empty_lines(lines) then
-    return { "" }
-  end
-  return lines
-end
-
-local function mark_clean(buf)
-  if vim.api.nvim_buf_is_valid(buf) then
-    vim.bo[buf].modified = false
-  end
-end
-
-local function sync_content(buf)
-  if not vim.api.nvim_buf_is_valid(buf) then
-    return
-  end
-
-  local section = section_by_id(vim.b[buf].jishiben_section_id)
-  module.set_section_lines(M.get_storage_path(), section.heading, content_lines(buf))
-  mark_clean(buf)
-end
-
 local function render_sidebar(buf, current_id)
   local lines = { "jishiben.nvim", "" }
 
-  for _, section in ipairs(sections) do
+  for _, section in ipairs(sections()) do
     local marker = section.id == current_id and "> " or "  "
     table.insert(lines, marker .. section.label)
   end
@@ -134,10 +102,17 @@ local function render_sidebar(buf, current_id)
   vim.bo[buf].modified = false
 end
 
-local function close_layout(sidebar_win, content_win, content_buf)
-  sync_content(content_buf)
+local function write_if_modified(buf)
+  if vim.api.nvim_buf_is_valid(buf) and vim.bo[buf].modified then
+    vim.api.nvim_buf_call(buf, function()
+      vim.cmd("silent write")
+    end)
+  end
+end
 
+local function close_layout(sidebar_win, content_win)
   if vim.api.nvim_win_is_valid(content_win) then
+    write_if_modified(vim.api.nvim_win_get_buf(content_win))
     vim.api.nvim_win_close(content_win, true)
   end
   if vim.api.nvim_win_is_valid(sidebar_win) then
@@ -146,8 +121,8 @@ local function close_layout(sidebar_win, content_win, content_buf)
 end
 
 M.open = function()
-  local path = M.get_storage_path()
-  module.ensure_default_content(path)
+  module.ensure_storage_file(M.config.notes_path)
+  module.ensure_storage_file(M.config.todos_path)
 
   local wc = M.config.win
   local width = wc.width or math.min(96, vim.o.columns - 4)
@@ -159,7 +134,8 @@ M.open = function()
   local title_pos = wc.title_pos or "center"
 
   local sidebar_buf = vim.api.nvim_create_buf(false, true)
-  local content_buf = vim.api.nvim_create_buf(false, true)
+  local current_section = section_by_id("notes")
+  local content_buf = module.ensure_storage_buffer(current_section.path)
 
   local sidebar_config = {
     relative = "editor",
@@ -187,21 +163,16 @@ M.open = function()
   if vim.fn.has("nvim-0.10") == 1 then
     sidebar_config.footer = " [Enter] open "
     sidebar_config.footer_pos = "center"
-    content_config.footer = " [n] note  [t] todo  [Space]x toggle  / search  q write+close "
+    content_config.footer = " [n] notes  [t] todos  / search  q write+close "
     content_config.footer_pos = "center"
   end
 
   local sidebar_win = vim.api.nvim_open_win(sidebar_buf, false, sidebar_config)
   local content_win = vim.api.nvim_open_win(content_buf, true, content_config)
-  local current_section = sections[1]
 
   vim.bo[sidebar_buf].buftype = "nofile"
   vim.bo[sidebar_buf].bufhidden = "wipe"
   vim.bo[sidebar_buf].modifiable = false
-  vim.bo[content_buf].buftype = "acwrite"
-  vim.bo[content_buf].bufhidden = "wipe"
-  vim.bo[content_buf].filetype = "markdown"
-  vim.api.nvim_buf_set_name(content_buf, "jishiben://" .. current_section.id .. "/" .. content_buf)
 
   vim.wo[sidebar_win].cursorline = true
   vim.wo[sidebar_win].number = false
@@ -211,80 +182,46 @@ M.open = function()
   vim.wo[content_win].number = true
   vim.wo[content_win].signcolumn = "no"
 
-  local function load_section(section)
-    if vim.b[content_buf].jishiben_section_id then
-      sync_content(content_buf)
-    end
-    current_section = section
-    vim.b[content_buf].jishiben_section_id = section.id
-    vim.bo[content_buf].modifiable = true
-    vim.api.nvim_buf_set_lines(content_buf, 0, -1, false, module.get_section_lines(path, section.heading))
-    mark_clean(content_buf)
-    render_sidebar(sidebar_buf, section.id)
-    set_content_title(content_win, section.label)
-    if vim.api.nvim_win_is_valid(content_win) then
-      vim.api.nvim_set_current_win(content_win)
-      vim.api.nvim_win_set_cursor(content_win, { 1, 0 })
-    end
-  end
-
-  local function insert_entry(section)
-    if current_section.id ~= section.id then
-      load_section(section)
-    end
-
-    local prefix = section.prefix()
-    local line_count = vim.api.nvim_buf_line_count(content_buf)
-    local last_line = vim.api.nvim_buf_get_lines(content_buf, line_count - 1, line_count, false)[1] or ""
-    local lnum = line_count
-
-    if last_line ~= "" then
-      lnum = line_count + 1
-      vim.api.nvim_buf_set_lines(content_buf, line_count, line_count, false, { prefix })
-    else
-      vim.api.nvim_buf_set_lines(content_buf, line_count - 1, line_count, false, { prefix })
-    end
-
-    vim.api.nvim_set_current_win(content_win)
-    start_insert_at(lnum, #prefix)
-  end
-
-  vim.api.nvim_create_autocmd("BufWriteCmd", {
-    buffer = content_buf,
-    callback = function()
-      sync_content(content_buf)
-    end,
-  })
-
-  vim.api.nvim_create_autocmd({ "BufLeave", "BufWinLeave" }, {
-    buffer = content_buf,
-    callback = function()
-      sync_content(content_buf)
-    end,
-  })
-
   local function map(buf, lhs, rhs, desc)
     vim.keymap.set("n", lhs, rhs, { buffer = buf, desc = desc })
   end
 
-  map(content_buf, "q", function()
-    close_layout(sidebar_win, content_win, content_buf)
-  end, "Jishiben close")
+  local load_section
 
-  map(content_buf, "n", function()
-    insert_entry(section_by_id("notes"))
-  end, "Jishiben add note")
+  local function map_content(buf)
+    map(buf, "q", function()
+      close_layout(sidebar_win, content_win)
+    end, "Jishiben close")
 
-  map(content_buf, "t", function()
-    insert_entry(section_by_id("todos"))
-  end, "Jishiben add todo")
+    map(buf, "n", function()
+      load_section(section_by_id("notes"))
+    end, "Jishiben open notes")
 
-  map(content_buf, "<Space>x", function()
-    M.toggle_todo()
-  end, "Jishiben toggle todo")
+    map(buf, "t", function()
+      load_section(section_by_id("todos"))
+    end, "Jishiben open todos")
+  end
+
+  load_section = function(section)
+    if current_section.id == section.id then
+      vim.api.nvim_set_current_win(content_win)
+      return
+    end
+
+    write_if_modified(vim.api.nvim_win_get_buf(content_win))
+    current_section = section
+    local buf = module.ensure_storage_buffer(section.path)
+    vim.api.nvim_win_set_buf(content_win, buf)
+    map_content(buf)
+    render_sidebar(sidebar_buf, section.id)
+    set_content_title(content_win, section.label)
+    vim.api.nvim_set_current_win(content_win)
+  end
+
+  map_content(content_buf)
 
   map(sidebar_buf, "q", function()
-    close_layout(sidebar_win, content_win, content_buf)
+    close_layout(sidebar_win, content_win)
   end, "Jishiben close")
 
   map(sidebar_buf, "<CR>", function()
@@ -300,40 +237,22 @@ M.open = function()
     load_section(section_by_id("todos"))
   end, "Jishiben open todos")
 
-  load_section(current_section)
+  render_sidebar(sidebar_buf, current_section.id)
 end
 
 ---@param text string?
 M.add_note = function(text)
-  module.insert_under_heading(M.get_storage_path(), module.headings.notes, note_prefix() .. (text or ""))
+  module.append_line(M.get_notes_path(), text or "")
 end
 
 ---@param text string?
 M.add_todo = function(text)
-  module.insert_under_heading(M.get_storage_path(), module.headings.todos, todo_prefix() .. (text or ""))
-end
-
-M.toggle_todo = function()
-  local buf = vim.api.nvim_get_current_buf()
-  local lnum = vim.api.nvim_win_get_cursor(0)[1]
-  local line = vim.api.nvim_buf_get_lines(buf, lnum - 1, lnum, false)[1] or ""
-  local toggled = line:gsub("%[ %]", "[x]", 1)
-
-  if toggled == line then
-    toggled = line:gsub("%[x%]", "[ ]", 1)
-  end
-  if toggled == line then
-    toggled = line:gsub("^(%s*%-)%s*", "%1 [ ] ", 1)
-  end
-  if toggled == line then
-    toggled = todo_prefix() .. line
-  end
-
-  vim.api.nvim_buf_set_lines(buf, lnum - 1, lnum, false, { toggled })
+  module.append_line(M.get_todos_path(), text or "")
 end
 
 M.clear_all = function()
-  module.clear_all(M.get_storage_path())
+  module.set_lines(M.get_notes_path(), {})
+  module.set_lines(M.get_todos_path(), {})
 end
 
 return M
