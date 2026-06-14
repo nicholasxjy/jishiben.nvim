@@ -2,7 +2,7 @@
 
 A lightweight notebook plugin for Neovim. Notes and todos live in separate markdown files and are edited from a two-pane TUI floating layout.
 
-![demo](assets/demo1.gif)
+![demo](assets/Screenshot.png)
 
 ## Features
 
