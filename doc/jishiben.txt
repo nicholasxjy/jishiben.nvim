@@ -11,23 +11,24 @@ CONTENTS                                                  *jishiben-contents*
 ==============================================================================
 1. INTRODUCTION                                                    *jishiben*
 
-jishiben.nvim is a lightweight notebook plugin for Neovim. Notes are stored
-as markdown in a single file and edited directly inside a floating window.
+jishiben.nvim is a lightweight notebook plugin for Neovim. Notes and todos
+are stored in separate markdown files and edited from a two-pane TUI floating
+layout.
 
 ==============================================================================
 2. COMMANDS                                                *jishiben-commands*
 
 :JishibenOpen                                                 *:JishibenOpen*
-    Open the real markdown storage file in a floating window.
+    Open the sidebar and markdown content pane.
 
 :JishibenNote                                                 *:JishibenNote*
-    Capture a timestamped note under the `## Capture` section.
+    Append raw text to the notes file.
 
 :JishibenTodo                                                 *:JishibenTodo*
-    Add an unchecked task under the `## Todo` section.
+    Append raw text to the todos file.
 
 :JishibenClear                                               *:JishibenClear*
-    Clear all content from the markdown file.
+    Clear both markdown files.
 
 ==============================================================================
 3. CONFIGURATION                                      *jishiben-configuration*
@@ -35,13 +36,14 @@ as markdown in a single file and edited directly inside a floating window.
 Call the setup function to configure the plugin: >lua
 
     require("jishiben").setup({
-      storage_path = vim.fn.stdpath("data") .. "/jishiben.md",
+      notes_path = vim.fn.stdpath("data") .. "/jishiben/notes.md",
+      todos_path = vim.fn.stdpath("data") .. "/jishiben/todos.md",
       win = {
-        title = " Jishiben ",
+        title = " jishiben.nvim ",
         title_pos = "center",
-        border = "rounded",
-        width = 60,
-        height = 20,
+        border = "single",
+        width = 96,
+        height = 24,
         row = 2,
         col = 10,
       },
@@ -50,55 +52,71 @@ Call the setup function to configure the plugin: >lua
 
 Options:
 
-  storage_path  `string`                                *jishiben-storage_path*
-      Path to the markdown file that stores all notes.
-      Default: `vim.fn.stdpath("data") .. "/jishiben.md"`
+  notes_path  `string`                                    *jishiben-notes_path*
+      Path to the notes markdown file.
+      Default: `vim.fn.stdpath("data") .. "/jishiben/notes.md"`
+
+  todos_path  `string`                                    *jishiben-todos_path*
+      Path to the todos markdown file.
+      Default: `vim.fn.stdpath("data") .. "/jishiben/todos.md"`
 
   win.title  `string`                                      *jishiben-win.title*
-      Title displayed on the floating window border.
-      Default: `" Jishiben "`
+      Title displayed on the sidebar floating window border.
+      Default: `" jishiben.nvim "`
 
   win.title_pos  `string`                              *jishiben-win.title_pos*
       Position of the title: "left", "center", or "right".
       Default: `"center"`
 
   win.border  `string|string[]`                           *jishiben-win.border*
-      Border style for the floating window.
-      Default: `"rounded"`
+      Border style for the floating windows.
+      Default: `"single"`
 
   win.width  `number|nil`                                    *jishiben-win.width*
-      Width of the floating window. When nil, auto-calculated (max 80).
+      Total width of the floating layout. When nil, auto-calculated (max 96).
       Default: `nil`
 
   win.height  `number|nil`                                  *jishiben-win.height*
-      Height of the floating window. When nil, auto-calculated (min 20).
+      Height of the floating layout. When nil, auto-calculated (max 24).
       Default: `nil`
 
   win.row  `number|nil`                                        *jishiben-win.row*
-      Row offset of the floating window. When nil, centered vertically.
+      Row offset of the floating layout. When nil, centered vertically.
       Default: `nil`
 
   win.col  `number|nil`                                        *jishiben-win.col*
-      Column offset of the floating window. When nil, centered horizontally.
+      Column offset of the floating layout. When nil, centered horizontally.
       Default: `nil`
 
 ==============================================================================
 4. EDITING                                                    *jishiben-editing*
 
-When the floating window opens, you are editing the actual markdown file.
-Normal markdown editing works as usual.
+When the floating layout opens, the left pane lists files and the right pane
+opens the selected markdown file. Normal markdown editing works in the right
+pane. The plugin does not require any specific markdown structure.
 
-  i         Add a timestamped note under `## Capture` and enter Insert mode.
-  o         Add an unchecked task under `## Todo` and enter Insert mode.
-  <Space>x  Toggle the current task between `[ ]` and `[x]`.
-  q         Close the floating window. Modified content is written first.
+Right pane mappings:
 
-Use normal markdown task-list editing directly in the file, for example:
+  n         Open `Notes`.
+  t         Open `Todos`.
+  q         Close the floating layout. Modified content is written first.
+
+Sidebar mappings:
+
+  <Enter>   Open the selected sidebar section.
+  n         Open `Notes`.
+  t         Open `Todos`.
+  q         Close the floating layout. Modified content is written first.
+
+Use normal markdown editing directly in each file, for example:
+
+  # Ideas
+  - Draft plugin README
 
   - [ ] inbox item
   - [x] finished item
 
-Use |:JishibenClear| to wipe the file content while keeping the markdown file.
+Use |:JishibenClear| to wipe both files while keeping the markdown files.
 
 ==============================================================================
 vim:tw=78:ts=8:ft=help:norl:
