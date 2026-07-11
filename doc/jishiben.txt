@@ -11,9 +11,9 @@ CONTENTS                                                  *jishiben-contents*
 ==============================================================================
 1. INTRODUCTION                                                    *jishiben*
 
-jishiben.nvim is a lightweight notebook plugin for Neovim. Notes and todos
-are stored in separate markdown files and edited from a two-pane TUI floating
-layout.
+jishiben.nvim is a lightweight notebook plugin for Neovim. Notes, todos, and
+prompts are stored in separate markdown files and edited from a two-pane TUI
+floating layout.
 
 ==============================================================================
 2. COMMANDS                                                *jishiben-commands*
@@ -28,7 +28,7 @@ layout.
     Append raw text to the todos file.
 
 :JishibenClear                                               *:JishibenClear*
-    Clear both markdown files.
+    Clear all three markdown files.
 
 ==============================================================================
 3. CONFIGURATION                                      *jishiben-configuration*
@@ -38,6 +38,7 @@ Call the setup function to configure the plugin: >lua
     require("jishiben").setup({
       notes_path = vim.fn.stdpath("data") .. "/jishiben/notes.md",
       todos_path = vim.fn.stdpath("data") .. "/jishiben/todos.md",
+      prompts_path = vim.fn.stdpath("data") .. "/jishiben/prompts.md",
       win = {
         title = " jishiben.nvim ",
         title_pos = "center",
@@ -59,6 +60,10 @@ Options:
   todos_path  `string`                                    *jishiben-todos_path*
       Path to the todos markdown file.
       Default: `vim.fn.stdpath("data") .. "/jishiben/todos.md"`
+
+  prompts_path  `string`                                *jishiben-prompts_path*
+      Path to the prompts markdown file.
+      Default: `vim.fn.stdpath("data") .. "/jishiben/prompts.md"`
 
   win.title  `string`                                      *jishiben-win.title*
       Title displayed on the sidebar floating window border.
@@ -99,6 +104,9 @@ Right pane mappings:
 
   n         Open `Notes`.
   t         Open `Todos`.
+  p         Open `Prompts`.
+  <Enter>   In Visual mode in `Prompts`, submit the selection to Sidekick and
+            open and focus its agent window.
   q         Close the floating layout. Modified content is written first.
 
 Sidebar mappings:
@@ -106,6 +114,7 @@ Sidebar mappings:
   <Enter>   Open the selected sidebar section.
   n         Open `Notes`.
   t         Open `Todos`.
+  p         Open `Prompts`.
   q         Close the floating layout. Modified content is written first.
 
 Use normal markdown editing directly in each file, for example:
@@ -116,7 +125,12 @@ Use normal markdown editing directly in each file, for example:
   - [ ] inbox item
   - [x] finished item
 
-Use |:JishibenClear| to wipe both files while keeping the markdown files.
+  Review this change for correctness and unnecessary complexity.
+
+The Visual <Enter> mapping requires sidekick.nvim with an AI CLI agent
+configured. The rest of jishiben.nvim works without Sidekick.
+
+Use |:JishibenClear| to wipe all three files while keeping the markdown files.
 
 ==============================================================================
 vim:tw=78:ts=8:ft=help:norl:

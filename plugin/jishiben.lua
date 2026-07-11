@@ -16,5 +16,5 @@ end, { nargs = "*" })
 
 vim.api.nvim_create_user_command("JishibenClear", function()
   jishiben.clear_all()
-  vim.notify("Jishiben: notes and todos cleared")
+  vim.notify("Jishiben: notes, todos, and prompts cleared")
 end, {})

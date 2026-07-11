@@ -7,6 +7,7 @@ local function make_tmp_paths()
     dir = dir,
     notes = dir .. "/notes.md",
     todos = dir .. "/todos.md",
+    prompts = dir .. "/prompts.md",
   }
 end
 
@@ -39,6 +40,7 @@ local function setup_tmp(paths)
   plugin.setup({
     notes_path = paths.notes,
     todos_path = paths.todos,
+    prompts_path = paths.prompts,
   })
 end
 
@@ -52,8 +54,8 @@ local function find_sidebar()
   return nil, nil
 end
 
-local function keymap_callback(buf, lhs)
-  for _, keymap in ipairs(vim.api.nvim_buf_get_keymap(buf, "n")) do
+local function keymap_callback(buf, lhs, mode)
+  for _, keymap in ipairs(vim.api.nvim_buf_get_keymap(buf, mode or "n")) do
     if keymap.lhs == lhs then
       return keymap.callback
     end
@@ -80,7 +82,7 @@ describe("jishiben", function()
     assert.is_nil(user_commands.JishibenToggle)
   end)
 
-  it("creates notes and todos markdown files", function()
+  it("creates notes, todos, and prompts markdown files", function()
     local paths = make_tmp_paths()
     setup_tmp(paths)
 
@@ -88,6 +90,7 @@ describe("jishiben", function()
 
     assert.are.equal(1, vim.fn.filereadable(paths.notes))
     assert.are.equal(1, vim.fn.filereadable(paths.todos))
+    assert.are.equal(1, vim.fn.filereadable(paths.prompts))
     assert.are.equal(2, #floating_windows())
 
     close_all_floats()
@@ -129,6 +132,43 @@ describe("jishiben", function()
     vim.fn.delete(paths.dir, "rf")
   end)
 
+  it("opens prompts and sends its visual selection to Sidekick", function()
+    local paths = make_tmp_paths()
+    setup_tmp(paths)
+
+    plugin.open()
+    local sidebar_win, sidebar_buf = find_sidebar()
+    assert.is_number(sidebar_win)
+    assert.is_number(sidebar_buf)
+
+    vim.api.nvim_set_current_win(sidebar_win)
+    vim.api.nvim_win_set_cursor(sidebar_win, { 5, 0 })
+    keymap_callback(sidebar_buf, "<CR>")()
+
+    local buf = vim.api.nvim_get_current_buf()
+    assert.are.equal(vim.fn.fnamemodify(paths.prompts, ":p"), vim.api.nvim_buf_get_name(buf))
+
+    local sent
+    local original_sidekick = package.loaded["sidekick.cli"]
+    package.loaded["sidekick.cli"] = {
+      send = function(opts)
+        sent = opts
+      end,
+    }
+
+    keymap_callback(buf, "<CR>", "x")()
+    package.loaded["sidekick.cli"] = original_sidekick
+
+    assert.are.same({
+      msg = "{selection}",
+      submit = true,
+      focus = true,
+    }, sent)
+
+    close_all_floats()
+    vim.fn.delete(paths.dir, "rf")
+  end)
+
   it("edits the real notes markdown file", function()
     local paths = make_tmp_paths()
     setup_tmp(paths)
@@ -162,6 +202,7 @@ describe("jishiben", function()
     plugin.setup({
       notes_path = paths.notes,
       todos_path = paths.todos,
+      prompts_path = paths.prompts,
       win = {
         width = 48,
         height = 12,
@@ -184,19 +225,22 @@ describe("jishiben", function()
     vim.fn.delete(paths.dir, "rf")
   end)
 
-  it("clears notes and todos but keeps both markdown files", function()
+  it("clears notes, todos, and prompts but keeps the markdown files", function()
     local paths = make_tmp_paths()
     vim.fn.mkdir(paths.dir, "p")
     vim.fn.writefile({ "one" }, paths.notes)
     vim.fn.writefile({ "two" }, paths.todos)
+    vim.fn.writefile({ "three" }, paths.prompts)
 
     setup_tmp(paths)
     plugin.clear_all()
 
     assert.are.equal(1, vim.fn.filereadable(paths.notes))
     assert.are.equal(1, vim.fn.filereadable(paths.todos))
+    assert.are.equal(1, vim.fn.filereadable(paths.prompts))
     assert.are.same({}, module.get_lines(paths.notes))
     assert.are.same({}, module.get_lines(paths.todos))
+    assert.are.same({}, module.get_lines(paths.prompts))
 
     vim.fn.delete(paths.dir, "rf")
   end)

@@ -1,14 +1,15 @@
 # jishiben.nvim
 
-A lightweight notebook plugin for Neovim. Notes and todos live in separate markdown files and are edited from a two-pane TUI floating layout.
+A lightweight notebook plugin for Neovim. Notes, todos, and prompts live in separate markdown files and are edited from a two-pane TUI floating layout.
 
 ![demo](assets/Screenshot.png)
 
 ## Features
 
-- Separate markdown files for notes and todos
-- TUI layout with a left sidebar for `Notes` and `Todos`
+- Separate markdown files for notes, todos, and prompts
+- TUI layout with a left sidebar for `Notes`, `Todos`, and `Prompts`
 - Right content pane opens the selected markdown file directly
+- Send a visual selection from `Prompts` to a Sidekick agent
 - Quick note and todo capture
 - Buffer-local mappings for switching files
 - Markdown workflow stays compatible with normal text editing
@@ -36,6 +37,8 @@ A lightweight notebook plugin for Neovim. Notes and todos live in separate markd
 }
 ```
 
+Sending prompts requires [sidekick.nvim](https://github.com/folke/sidekick.nvim) with an AI CLI agent configured. The rest of jishiben.nvim works without Sidekick.
+
 ### packer.nvim
 
 ```lua
@@ -54,7 +57,7 @@ use({
 | `:JishibenOpen` | Open the sidebar and markdown content pane |
 | `:JishibenNote {text}` | Append raw text to the notes file |
 | `:JishibenTodo {text}` | Append raw text to the todos file |
-| `:JishibenClear` | Clear both markdown files |
+| `:JishibenClear` | Clear all three markdown files |
 
 ## Configuration
 
@@ -64,6 +67,7 @@ All options are optional. Below are the defaults:
 require("jishiben").setup({
   notes_path = vim.fn.stdpath("data") .. "/jishiben/notes.md",
   todos_path = vim.fn.stdpath("data") .. "/jishiben/todos.md",
+  prompts_path = vim.fn.stdpath("data") .. "/jishiben/prompts.md",
   win = {
     title = " jishiben.nvim ",
     title_pos = "center",
@@ -80,6 +84,7 @@ require("jishiben").setup({
 | --- | --- | --- | --- |
 | `notes_path` | `string` | `stdpath("data") .. "/jishiben/notes.md"` | Path to the notes markdown file |
 | `todos_path` | `string` | `stdpath("data") .. "/jishiben/todos.md"` | Path to the todos markdown file |
+| `prompts_path` | `string` | `stdpath("data") .. "/jishiben/prompts.md"` | Path to the prompts markdown file |
 | `win.title` | `string` | `" jishiben.nvim "` | Sidebar floating window title |
 | `win.title_pos` | `string` | `"center"` | Title position |
 | `win.border` | `string\|string[]` | `"single"` | Border style |
@@ -94,7 +99,7 @@ require("jishiben").setup({
 :JishibenOpen
 ```
 
-`JishibenOpen` creates a left sidebar and a right content pane. The sidebar lists `Notes` and `Todos`; the right pane opens either `notes.md` or `todos.md` as a normal markdown buffer. Use any markdown structure you want.
+`JishibenOpen` creates a left sidebar and a right content pane. The sidebar lists `Notes`, `Todos`, and `Prompts`; the right pane opens `notes.md`, `todos.md`, or `prompts.md` as a normal markdown buffer. Use any markdown structure you want.
 
 Example `notes.md`:
 
@@ -111,6 +116,16 @@ Example `todos.md`:
 - call Alice
 ```
 
+Example `prompts.md`:
+
+```md
+Review this change for correctness and unnecessary complexity.
+
+Explain the selected code and suggest a smaller implementation.
+```
+
+In `Prompts`, visually select any part of the file and press `<Enter>`. Jishiben sends the selection to the attached Sidekick agent with `submit = true`, then opens and focuses Sidekick. If no agent is attached, Sidekick prompts you to select one.
+
 When the floating layout opens, normal editing happens in the right content pane. Add, reorder, or rewrite content with normal markdown editing commands. Press `q` to close both panes; modified content is written before closing.
 
 Content pane mappings:
@@ -119,6 +134,8 @@ Content pane mappings:
 | --- | --- |
 | `n` | Open `Notes` |
 | `t` | Open `Todos` |
+| `p` | Open `Prompts` |
+| Visual `<Enter>` | Send the selection to Sidekick (only in `Prompts`) |
 | `q` | Write modified content and close the floating layout |
 
 Sidebar mappings:
@@ -128,9 +145,10 @@ Sidebar mappings:
 | `<Enter>` | Open the selected sidebar section |
 | `n` | Open `Notes` |
 | `t` | Open `Todos` |
+| `p` | Open `Prompts` |
 | `q` | Write modified content and close the floating layout |
 
-`JishibenClear` wipes both markdown files while keeping the files themselves.
+`JishibenClear` wipes all three markdown files while keeping the files themselves.
 
 ## Development
 
