@@ -12,6 +12,7 @@ local module = require("jishiben.module")
 ---@class JishibenConfig
 ---@field notes_path string
 ---@field todos_path string
+---@field prompts_path string
 ---@field win JishibenWinConfig
 
 local data_dir = vim.fn.stdpath("data") .. "/jishiben"
@@ -22,6 +23,7 @@ local M = {}
 M.config = {
   notes_path = data_dir .. "/notes.md",
   todos_path = data_dir .. "/todos.md",
+  prompts_path = data_dir .. "/prompts.md",
   win = {
     title = " jishiben.nvim ",
     title_pos = "center",
@@ -40,6 +42,11 @@ local function sections()
       id = "todos",
       label = "Todos",
       path = M.config.todos_path,
+    },
+    {
+      id = "prompts",
+      label = "Prompts",
+      path = M.config.prompts_path,
     },
   }
 end
@@ -75,6 +82,25 @@ end
 ---@return string
 M.get_todos_path = function()
   return M.config.todos_path
+end
+
+---@return string
+M.get_prompts_path = function()
+  return M.config.prompts_path
+end
+
+local function send_visual_selection()
+  local ok, sidekick = pcall(require, "sidekick.cli")
+  if not ok then
+    vim.notify("Jishiben: sidekick.nvim is not available", vim.log.levels.ERROR)
+    return
+  end
+
+  sidekick.send({
+    msg = "{selection}",
+    submit = true,
+    focus = true,
+  })
 end
 
 local function set_content_title(win, title)
@@ -123,6 +149,7 @@ end
 M.open = function()
   module.ensure_storage_file(M.config.notes_path)
   module.ensure_storage_file(M.config.todos_path)
+  module.ensure_storage_file(M.config.prompts_path)
 
   local wc = M.config.win
   local width = wc.width or math.min(96, vim.o.columns - 4)
@@ -163,7 +190,7 @@ M.open = function()
   if vim.fn.has("nvim-0.10") == 1 then
     sidebar_config.footer = " [Enter] open "
     sidebar_config.footer_pos = "center"
-    content_config.footer = " [n] notes  [t] todos  q write+close "
+    content_config.footer = " [n] notes  [t] todos  [p] prompts  q write+close "
     content_config.footer_pos = "center"
   end
 
@@ -200,6 +227,17 @@ M.open = function()
     map(buf, "t", function()
       load_section(section_by_id("todos"))
     end, "Jishiben open todos")
+
+    map(buf, "p", function()
+      load_section(section_by_id("prompts"))
+    end, "Jishiben open prompts")
+
+    if current_section.id == "prompts" then
+      vim.keymap.set("x", "<CR>", send_visual_selection, {
+        buffer = buf,
+        desc = "Jishiben send selection to Sidekick",
+      })
+    end
   end
 
   load_section = function(section)
@@ -237,6 +275,10 @@ M.open = function()
     load_section(section_by_id("todos"))
   end, "Jishiben open todos")
 
+  map(sidebar_buf, "p", function()
+    load_section(section_by_id("prompts"))
+  end, "Jishiben open prompts")
+
   render_sidebar(sidebar_buf, current_section.id)
 end
 
@@ -253,6 +295,7 @@ end
 M.clear_all = function()
   module.set_lines(M.get_notes_path(), {})
   module.set_lines(M.get_todos_path(), {})
+  module.set_lines(M.get_prompts_path(), {})
 end
 
 return M
