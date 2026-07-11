@@ -22,6 +22,12 @@ A lightweight notebook plugin for Neovim. Notes, todos, and prompts live in sepa
 {
   "nicholasxjy/jishiben.nvim",
   event = "VeryLazy",
+  dependencies = {
+    {
+      "folke/sidekick.nvim",
+      opts = {},
+    },
+  },
   opts = {
     win = {
       title = "JISHIBEN",
@@ -37,7 +43,7 @@ A lightweight notebook plugin for Neovim. Notes, todos, and prompts live in sepa
 }
 ```
 
-Sending prompts requires [sidekick.nvim](https://github.com/folke/sidekick.nvim) with an AI CLI agent configured. The rest of jishiben.nvim works without Sidekick.
+Sending prompts requires [sidekick.nvim](https://github.com/folke/sidekick.nvim) with an AI CLI agent configured. Remove the `dependencies` block if you do not use prompt sending; the rest of jishiben.nvim works without Sidekick.
 
 ### packer.nvim
 
