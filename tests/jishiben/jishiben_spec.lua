@@ -127,6 +127,7 @@ describe("jishiben", function()
 
     local buf = vim.api.nvim_get_current_buf()
     assert.are.equal(vim.fn.fnamemodify(paths.todos, ":p"), vim.api.nvim_buf_get_name(buf))
+    assert.are.equal("markdown", vim.bo[buf].filetype)
 
     close_all_floats()
     vim.fn.delete(paths.dir, "rf")
@@ -147,6 +148,7 @@ describe("jishiben", function()
 
     local buf = vim.api.nvim_get_current_buf()
     assert.are.equal(vim.fn.fnamemodify(paths.prompts, ":p"), vim.api.nvim_buf_get_name(buf))
+    assert.are.equal("markdown", vim.bo[buf].filetype)
 
     local sent
     local original_sidekick = package.loaded["sidekick.cli"]

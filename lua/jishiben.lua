@@ -196,6 +196,7 @@ M.open = function()
 
   local sidebar_win = vim.api.nvim_open_win(sidebar_buf, false, sidebar_config)
   local content_win = vim.api.nvim_open_win(content_buf, true, content_config)
+  vim.bo[content_buf].filetype = "markdown"
 
   vim.bo[sidebar_buf].buftype = "nofile"
   vim.bo[sidebar_buf].bufhidden = "wipe"
@@ -250,6 +251,7 @@ M.open = function()
     current_section = section
     local buf = module.ensure_storage_buffer(section.path)
     vim.api.nvim_win_set_buf(content_win, buf)
+    vim.bo[buf].filetype = "markdown"
     map_content(buf)
     render_sidebar(sidebar_buf, section.id)
     set_content_title(content_win, section.label)
